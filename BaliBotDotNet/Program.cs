@@ -44,7 +44,7 @@ namespace BaliBotDotNet
             {
                 return;
             }
-            Regex regex = new Regex(@"-?.\d*\.?\d* .(ft|mi|c|f|kg|lb|km|m) *", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"-?.\d*\.?\d* ?(ft|mi|lb|kg|km|c|f|m) *", RegexOptions.IgnoreCase);
             var matches = regex.Matches(message.Content);
             var unit = matches.FirstOrDefault()?.Groups.Values.Last().Value;
             var match = matches.FirstOrDefault()?.ToString();
@@ -83,7 +83,7 @@ namespace BaliBotDotNet
                 .AddSingleton<CommandService>()
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<HttpClient>()
-                .AddSingleton<PictureService>()
+                .AddSingleton<WebService>()
                 .BuildServiceProvider();
         }
     }
