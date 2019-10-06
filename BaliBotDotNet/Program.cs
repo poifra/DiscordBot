@@ -44,14 +44,17 @@ namespace BaliBotDotNet
             {
                 return;
             }
-            Regex regex = new Regex(@"-?.\d*\.?\d* ?(ft|mi|lb|kg|km|c|f|m) *", RegexOptions.IgnoreCase);
+            //TODO : Convert to command
+            Regex regex = new Regex(@"-?.\d+\.?\d*\s?(ft|mi|lb|kg|km|c|f|m)([\s\t\n]+|$)", RegexOptions.IgnoreCase);
             var matches = regex.Matches(message.Content);
-            var unit = matches.FirstOrDefault()?.Groups.Values.Last().Value;
-            var match = matches.FirstOrDefault()?.ToString();
+            var match = matches.FirstOrDefault();
+
+            var unit = match?.Groups[1].ToString();
+            var wholeMatch = match?.Groups[0].ToString().Trim();
 
             if (unit == null 
                 || match == null
-                || !double.TryParse(match.Substring(0, match.Length - unit.Length), NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
+                || !double.TryParse(wholeMatch.Substring(0, wholeMatch.Length - unit.Length), NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
             {
                 return;
             }

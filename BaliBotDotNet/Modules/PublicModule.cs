@@ -27,11 +27,17 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("xkcd")]
-        public async Task XKCDAsync(string xkcdID=null) 
+        public async Task XKCDAsync(string xkcdID = null)
         {
             XKCDContainer container;
+
+            //TODO: random comic
             if (xkcdID == null)
-            { 
+            {
+                container = await WebService.GetXKCDAsync(null, true);
+            }
+            else if (xkcdID == "last")
+            {
                 container = await WebService.GetXKCDAsync(null);
             }
             else if (!int.TryParse(xkcdID, out int id) || id < 1)
@@ -40,7 +46,7 @@ namespace BaliBotDotNet.Modules
                 return;
             }
             else
-            { 
+            {
                 container = await WebService.GetXKCDAsync(id);
             }
 
