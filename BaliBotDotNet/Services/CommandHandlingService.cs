@@ -13,7 +13,7 @@ namespace BaliBotDotNet.Services
         private readonly CommandService _commands;
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
-        private const char _prefix = '$';
+        public const char Prefix = '$';
 
         public CommandHandlingService(IServiceProvider services)
         {
@@ -40,7 +40,7 @@ namespace BaliBotDotNet.Services
             // This value holds the offset where the prefix ends
             var argPos = 0;
 
-            if (!message.HasCharPrefix(_prefix,ref argPos))
+            if (!message.HasCharPrefix(Prefix,ref argPos))
             {
                 return;
             }

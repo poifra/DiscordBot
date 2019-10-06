@@ -45,7 +45,7 @@ namespace BaliBotDotNet
                 return;
             }
             //TODO : Convert to command
-            Regex regex = new Regex(@"-?.\d+\.?\d*\s?(ft|mi|lb|kg|km|c|f|m)([\s\t\n]+|$)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"-?.[0-9]?\.?[0-9]*\s?(ft|mi|lb|kg|km|c|f|m)([\s\t\n]+|$)", RegexOptions.IgnoreCase);
             var matches = regex.Matches(message.Content);
             var match = matches.FirstOrDefault();
 

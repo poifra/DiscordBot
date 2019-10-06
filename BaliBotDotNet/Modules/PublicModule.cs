@@ -18,6 +18,7 @@ namespace BaliBotDotNet.Modules
             => ReplyAsync("pong!");
 
         [Command("cat")]
+        [Summary("Gets a cat picture")]
         public async Task CatAsync()
         {
             var stream = await WebService.GetCatPictureAsync();
@@ -27,6 +28,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("xkcd")]
+        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" is specified as ID.")]        
         public async Task XKCDAsync(string xkcdID = null)
         {
             XKCDContainer container;
@@ -64,8 +66,8 @@ namespace BaliBotDotNet.Modules
             }
         }
 
-        // Get info on a user, or the user who invoked the command if one is not specified
         [Command("userinfo")]
+        [Summary("Get info on a user, or the user who invoked the command if one is not specified")]
         public async Task UserInfoAsync(IUser user = null)
         {
             user ??= Context.User;
@@ -73,6 +75,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("logout")]
+        [Summary("Logs out the bot.")]
         public async Task LogoutAsync2()
         {
             await ReplyAsync("Later nerds, I'm going to bed!");
