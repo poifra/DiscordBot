@@ -12,6 +12,7 @@ using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Text.Json;
 using BaliBotDotNet.Utilities;
+using BalibotTest.MeasurementResolving;
 
 namespace BaliBotDotNet
 {
@@ -19,8 +20,11 @@ namespace BaliBotDotNet
     class Program
     {
         UOMConverter Converter = new UOMConverter();
-        static void Main(string[] args)
-            => new Program().MainAsync().GetAwaiter().GetResult();
+
+        static void Main(string[] args) {
+            MeasurementConversionHandler.GenerateAvailableMeasurementsList();
+            new Program().MainAsync().GetAwaiter().GetResult();
+        }
 
         public async Task MainAsync()
         {
@@ -47,35 +51,12 @@ namespace BaliBotDotNet
             {
                 return;
             }
-            //TODO : Convert to command
-            Regex regex = new Regex(@"-?\d+\.?\d+\s?(ft|mi|lb|kg|km|c|f|m)([\s\t\n]+|$)", RegexOptions.IgnoreCase);
-            var matches = regex.Matches(message.Content);
-            var match = matches.FirstOrDefault();
 
-            var unit = match?.Groups[1].ToString();
-            var wholeMatch = match?.Groups[0].ToString().Trim();
+            var regexResult=MeasurementMessageHandler.TryConvertMessage(message.Content);
 
-            if (unit == null
-                || match == null
-                || !double.TryParse(wholeMatch.Substring(0, wholeMatch.Length - unit.Length), NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
-            {
-                return;
+            if (regexResult != null) {
+                await message.Channel.SendMessageAsync(regexResult);
             }
-
-            unit = unit.ToLowerInvariant();
-
-            _ = (unit switch
-            {
-                "ft" => await message.Channel.SendMessageAsync(match + " is " + (number * 0.3054).ToString("N", CultureInfo.InvariantCulture) + " meters."),
-                "m" => await message.Channel.SendMessageAsync(match + " is " + (number / 0.3054).ToString("N", CultureInfo.InvariantCulture) + " feet."),
-                "c" => await message.Channel.SendMessageAsync(match + " is " + (number * (9.0 / 5.0) + 32).ToString("N", CultureInfo.InvariantCulture) + " fahreinheit"),
-                "f" => await message.Channel.SendMessageAsync(match + " is " + ((number - 32) / (9.0 / 5.0)).ToString("N", CultureInfo.InvariantCulture) + " celsius."),
-                "kg" => await message.Channel.SendMessageAsync(match + " is " + (number * 2.2046).ToString("N", CultureInfo.InvariantCulture) + " pounds."),
-                "lb" => await message.Channel.SendMessageAsync(match + " is " + (number / 2.2046).ToString("N", CultureInfo.InvariantCulture) + " kilograms."),
-                "km" => await message.Channel.SendMessageAsync(match + " is " + (number / 1.6093).ToString("N", CultureInfo.InvariantCulture) + " miles."),
-                "mi" => await message.Channel.SendMessageAsync(match + " is " + (number * 1.6093).ToString("N", CultureInfo.InvariantCulture) + " kilometers."),
-                _ => null,
-            });
         }
         private Task LogAsync(LogMessage log)
         {
