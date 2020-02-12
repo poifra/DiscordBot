@@ -11,14 +11,14 @@ namespace BalibotTest.MeasurementResolving {
         public static Measurement TryConvertFrom(Measurement measurement) {
 
             foreach (var conversion in ConversionValues) {
-                if (conversion.first.Split(',').Contains(measurement.Name)) {
+                if (conversion.first.Split(',').Contains(measurement.Name.ToLower())) {
                     return new Measurement(
                         (measurement.Amount+conversion.offset)*conversion.conversionRate,
                         conversion.second.Split(',').FirstOrDefault(),
                         conversion.isExact
                         );
                 }
-                if (conversion.second.Split(',').Contains(measurement.Name)) {
+                if (conversion.second.Split(',').Contains(measurement.Name.ToLower())) {
                     return new Measurement(
                         (measurement.Amount/conversion.conversionRate)-conversion.offset,
                         conversion.first.Split(',').FirstOrDefault(),
