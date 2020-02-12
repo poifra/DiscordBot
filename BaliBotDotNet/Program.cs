@@ -11,11 +11,13 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Text.Json;
+using BaliBotDotNet.Utilities;
 
 namespace BaliBotDotNet
 {
     class Program
     {
+        UOMConverter Converter = new UOMConverter();
         static void Main(string[] args)
             => new Program().MainAsync().GetAwaiter().GetResult();
 
@@ -36,8 +38,8 @@ namespace BaliBotDotNet
             //Initialize the logic required to register commands.
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
             await Task.Delay(-1);
-        }
 
+        }
         private async Task MessageHandler(SocketMessage message)
         {
             if (message.Source != MessageSource.User) //bot doesnt reply to other bots (including itself)
@@ -45,14 +47,14 @@ namespace BaliBotDotNet
                 return;
             }
             //TODO : Convert to command
-            Regex regex = new Regex(@"-?.[0-9]?\.?[0-9]*\s?(ft|mi|lb|kg|km|c|f|m)([\s\t\n]+|$)", RegexOptions.IgnoreCase);
+            Regex regex = new Regex(@"-?\d+\.?\d+\s?(ft|mi|lb|kg|km|c|f|m)([\s\t\n]+|$)", RegexOptions.IgnoreCase);
             var matches = regex.Matches(message.Content);
             var match = matches.FirstOrDefault();
 
             var unit = match?.Groups[1].ToString();
             var wholeMatch = match?.Groups[0].ToString().Trim();
 
-            if (unit == null 
+            if (unit == null
                 || match == null
                 || !double.TryParse(wholeMatch.Substring(0, wholeMatch.Length - unit.Length), NumberStyles.Float, CultureInfo.InvariantCulture, out double number))
             {
@@ -60,11 +62,12 @@ namespace BaliBotDotNet
             }
 
             unit = unit.ToLowerInvariant();
+
             _ = (unit switch
             {
                 "ft" => await message.Channel.SendMessageAsync(match + " is " + (number * 0.3054).ToString("N", CultureInfo.InvariantCulture) + " meters."),
                 "m" => await message.Channel.SendMessageAsync(match + " is " + (number / 0.3054).ToString("N", CultureInfo.InvariantCulture) + " feet."),
-                "c" => await message.Channel.SendMessageAsync(match + " is " + (number * (9 / 5) + 32).ToString("N", CultureInfo.InvariantCulture) + " fahreinheit"),
+                "c" => await message.Channel.SendMessageAsync(match + " is " + (number * (9.0 / 5.0) + 32).ToString("N", CultureInfo.InvariantCulture) + " fahreinheit"),
                 "f" => await message.Channel.SendMessageAsync(match + " is " + ((number - 32) / (9.0 / 5.0)).ToString("N", CultureInfo.InvariantCulture) + " celsius."),
                 "kg" => await message.Channel.SendMessageAsync(match + " is " + (number * 2.2046).ToString("N", CultureInfo.InvariantCulture) + " pounds."),
                 "lb" => await message.Channel.SendMessageAsync(match + " is " + (number / 2.2046).ToString("N", CultureInfo.InvariantCulture) + " kilograms."),

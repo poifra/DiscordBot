@@ -27,6 +27,14 @@ namespace BaliBotDotNet.Modules
             await Context.Channel.SendFileAsync(stream, "cat.png");
         }
 
+        [Command("dog")]
+        [Summary("joke")]
+        public async Task DogAsync()
+        {
+            await ReplyAsync("Find me a dog API and I'll do it.");
+            await ReplyAsync(":dog:");
+        }
+
         [Command("xkcd")]
         [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" is specified as ID.")]        
         public async Task XKCDAsync(string xkcdID = null)
