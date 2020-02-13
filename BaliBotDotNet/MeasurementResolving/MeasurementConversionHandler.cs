@@ -5,7 +5,6 @@ namespace BalibotTest.MeasurementResolving
 {
     public static class MeasurementConversionHandler
     {
-
         private const string separator = "|";
 
         public static List<string> AvailableMeasurementNames;
