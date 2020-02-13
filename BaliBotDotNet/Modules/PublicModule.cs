@@ -22,6 +22,11 @@ namespace BaliBotDotNet.Modules
         public async Task CatAsync()
         {
             var stream = await WebService.GetCatPictureAsync();
+            if (stream == null)
+            { 
+                await Context.Channel.SendMessageAsync("Cat API timed out :(");
+                return;
+            }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
             await Context.Channel.SendFileAsync(stream, "cat.png");
@@ -68,7 +73,7 @@ namespace BaliBotDotNet.Modules
             {
                 // Streams must be seeked to beginning before being uploaded!
                 container.Image.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendMessageAsync("Title: " + container.Title);
+                await Context.Channel.SendMessageAsync("#"+container.ID+": " + container.Title);
                 await Context.Channel.SendFileAsync(container.Image, "xkcd.png");
                 await Context.Channel.SendMessageAsync("Alt text: " + container.AltText);
             }

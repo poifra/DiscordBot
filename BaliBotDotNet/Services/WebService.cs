@@ -11,12 +11,24 @@ namespace BaliBotDotNet.Services
         private readonly HttpClient _http;
 
         public WebService(HttpClient http)
-            => _http = http;
+        {
+            _http = http;
+            _http.Timeout = TimeSpan.FromSeconds(3);
+        }
+          
 
         public async Task<Stream> GetCatPictureAsync()
         {
-            var resp = await _http.GetAsync("https://cataas.com/cat");
-            return await resp.Content.ReadAsStreamAsync();
+            try
+            {
+                var resp = await _http.GetAsync("https://cataas.com/cat");
+                return await resp.Content.ReadAsStreamAsync();
+            }
+            catch (Exception e) //who needs to be specific Kappa
+            {
+                return null;
+            }
+           
         }
 
         internal async Task<XKCDContainer> GetXKCDAsync(int? id, bool getRandom = false)
@@ -37,11 +49,13 @@ namespace BaliBotDotNet.Services
                 return await GetXKCDAsync(rng.Next(1, numberOfComics + 1)); //.Next(a,b) returns [a,b[ interval
             }
 
+            var num = document.RootElement.GetProperty("num").ToString();
             var title = document.RootElement.GetProperty("title").GetString();
             var alt = document.RootElement.GetProperty("alt").GetString();
             var image = (await _http.GetAsync(document.RootElement.GetProperty("img").GetString())).Content.ReadAsStreamAsync();
             var container = new XKCDContainer
             {
+                ID = num,
                 Image = await image,
                 AltText = alt,
                 Title = title,
@@ -52,6 +66,7 @@ namespace BaliBotDotNet.Services
 
     public class XKCDContainer
     {
+        public string ID { get; set; }
         public Stream Image { get; set; }
         public string Title { get; set; }
         public string AltText { get; set; }

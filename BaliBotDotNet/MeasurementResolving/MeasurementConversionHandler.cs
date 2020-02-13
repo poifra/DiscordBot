@@ -1,42 +1,50 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace BalibotTest.MeasurementResolving {
-    public static class MeasurementConversionHandler {
+namespace BalibotTest.MeasurementResolving
+{
+    public static class MeasurementConversionHandler
+    {
 
         private const string separator = "|";
 
         public static List<string> AvailableMeasurementNames;
-        
-        public static Measurement TryConvertFrom(Measurement measurement) {
 
-            foreach (var conversion in ConversionValues) {
-                if (conversion.first.Split(',').Contains(measurement.Name.ToLower())) {
+        public static Measurement TryConvertFrom(Measurement measurement)
+        {
+            foreach (var conversion in ConversionValues)
+            {
+                if (conversion.first.Split(',').Contains(measurement.Name.ToLower()))
+                {
                     return new Measurement(
-                        (measurement.Amount+conversion.offset)*conversion.conversionRate,
+                        (measurement.Amount + conversion.offset) * conversion.conversionRate,
                         conversion.second.Split(',').FirstOrDefault(),
                         conversion.isExact
                         );
                 }
-                if (conversion.second.Split(',').Contains(measurement.Name.ToLower())) {
+                if (conversion.second.Split(',').Contains(measurement.Name.ToLower()))
+                {
                     return new Measurement(
-                        (measurement.Amount/conversion.conversionRate)-conversion.offset,
+                        (measurement.Amount / conversion.conversionRate) - conversion.offset,
                         conversion.first.Split(',').FirstOrDefault(),
                         conversion.isExact
                     );
                 }
             }
-
             return null;
         }
 
-        public static void GenerateAvailableMeasurementsList() {
-            AvailableMeasurementNames=new List<string>();
-            foreach (var conversionValue in ConversionValues) {
-                foreach (var name in conversionValue.first.Split(',')) {
+        public static void GenerateAvailableMeasurementsList()
+        {
+            AvailableMeasurementNames = new List<string>();
+            foreach (var conversionValue in ConversionValues)
+            {
+                foreach (var name in conversionValue.first.Split(','))
+                {
                     AvailableMeasurementNames.Add(name);
                 }
-                foreach (var name in conversionValue.second.Split(',')) {
+                foreach (var name in conversionValue.second.Split(','))
+                {
                     AvailableMeasurementNames.Add(name);
                 }
             }
