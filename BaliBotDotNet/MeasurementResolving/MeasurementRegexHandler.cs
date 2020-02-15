@@ -7,7 +7,6 @@ namespace BalibotTest.MeasurementResolving
 {
     public static class MeasurementRegexHandler
     {
-
         public static List<Measurement> GetMeasurementsFromMessage(string message)
         {
             var Measurements = new List<Measurement>();
@@ -15,7 +14,6 @@ namespace BalibotTest.MeasurementResolving
             foreach (var measurementName in
                 MeasurementConversionHandler.AvailableMeasurementNames)
             {
-
                 var regex = new Regex(@"([-+]?[0-9]*\.?[0-9]+)\s*(" +
                                       measurementName + @")([\s\t\n]+|$)",
                                         RegexOptions.IgnoreCase);

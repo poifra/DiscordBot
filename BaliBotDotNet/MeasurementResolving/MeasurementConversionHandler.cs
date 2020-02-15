@@ -63,15 +63,16 @@ namespace BalibotTest.MeasurementResolving
                 ("£", "$", 1.30f, 0, false),
                 
                 //memes
-                ("streamer,broadcaster,boss lady", "ragnarokette", 1, 0, true),
+                ("streamer,strimmer,broadcaster,boss lady", "ragnarokette", 1, 0, true),
                 ("gay","impasta",1,0,true),
-                ("bali,kem,veron,kestnutts,kestbutts,oferon","nerd",1,0,false),
+                ("bali,kem,veron,kestnutts,kestbutts,oferon,drake","nerd",1,0,false),
                 ("snivy","lily",1,0,true),
                 ("pocket monster","cuteness",1000,0,true),
                 ("bird,birds","flare",1,0,false),
                 ("perv",":sabergreeb:",1,0,false),
                 ("dad joke",":RageNarokette:",1,0,true),
                 ("starcraft","lifetime of pain",1,0,false),
+                ("week", "https://www.youtube.com/watch?v=fC_q9KPczAg",1,0,false)
             };
 
     }

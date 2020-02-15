@@ -19,17 +19,24 @@ namespace BaliBotDotNet.Modules
 
         [Command("cat")]
         [Summary("Gets a cat picture")]
-        public async Task CatAsync()
+        public async Task CatAsync(string word = null)
         {
-            var stream = await WebService.GetCatPictureAsync();
+            var stream = await WebService.GetCatPictureAsync(word);
             if (stream == null)
-            { 
+            {
                 await Context.Channel.SendMessageAsync("Cat API timed out :(");
                 return;
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "cat.png");
+            if (word.Equals("gif"))
+            {
+                await Context.Channel.SendFileAsync(stream, "cat.gif");
+            }
+            else
+            {
+                await Context.Channel.SendFileAsync(stream, "cat.png");
+            }
         }
 
         [Command("dog")]
@@ -41,12 +48,11 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("xkcd")]
-        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" is specified as ID.")]        
+        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" is specified as ID.")]
         public async Task XKCDAsync(string xkcdID = null)
         {
             XKCDContainer container;
 
-            //TODO: random comic
             if (xkcdID == null)
             {
                 container = await WebService.GetXKCDAsync(null, true);
@@ -73,7 +79,7 @@ namespace BaliBotDotNet.Modules
             {
                 // Streams must be seeked to beginning before being uploaded!
                 container.Image.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendMessageAsync("#"+container.ID+": " + container.Title);
+                await Context.Channel.SendMessageAsync("#" + container.ID + ": " + container.Title);
                 await Context.Channel.SendFileAsync(container.Image, "xkcd.png");
                 await Context.Channel.SendMessageAsync("Alt text: " + container.AltText);
             }

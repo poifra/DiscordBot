@@ -15,7 +15,7 @@ namespace BalibotTest.MeasurementResolving
 
         public override string ToString()
         {
-            return (IsExact ? "" : "about ") + Amount + Name;
+            return (IsExact ? "" : "about ") + Amount.ToString("0.##") + " " + Name;
         }
     }
 }
