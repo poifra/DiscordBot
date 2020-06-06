@@ -19,7 +19,7 @@ namespace BaliBotDotNet.Modules
 
         [Command("cat")]
         [Summary("Gets a cat picture")]
-        public async Task CatAsync(string word = null)
+        public async Task CatAsync(string word = "")
         {
             var stream = await WebService.GetCatPictureAsync(word);
             if (stream == null)
@@ -43,8 +43,15 @@ namespace BaliBotDotNet.Modules
         [Summary("joke")]
         public async Task DogAsync()
         {
-            await ReplyAsync("Find me a dog API and I'll do it.");
-            await ReplyAsync(":dog:");
+            var stream = await WebService.GetDogPictureAsync();
+            if (stream == null)
+            {
+                await Context.Channel.SendMessageAsync("Dog API timed out :(");
+                return;
+            }
+            // Streams must be seeked to beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "dog.png");
         }
 
         [Command("xkcd")]

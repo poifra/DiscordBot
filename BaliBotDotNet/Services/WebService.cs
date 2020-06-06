@@ -18,7 +18,7 @@ namespace BaliBotDotNet.Services
         }
 
 
-        public async Task<Stream> GetCatPictureAsync(string word = null)
+        internal async Task<Stream> GetCatPictureAsync(string word = "")
         {
             try
             {
@@ -42,11 +42,18 @@ namespace BaliBotDotNet.Services
                 }
                 return await resp.Content.ReadAsStreamAsync();
             }
-            catch (Exception e) //who needs to be specific Kappa
+            catch (Exception) //who needs to be specific Kappa
             {
                 return null;
             }
+        }
 
+        internal async Task<Stream> GetDogPictureAsync()
+        {
+            var jsonResponse = await _http.GetAsync("https://dog.ceo/api/breeds/image/random");
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            var image = await (await _http.GetAsync(document.RootElement.GetProperty("message").GetString())).Content.ReadAsStreamAsync();
+            return image;
         }
 
         internal async Task<XKCDContainer> GetXKCDAsync(int? id, bool getRandom = false)

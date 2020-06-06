@@ -4,9 +4,7 @@ using System.Linq;
 namespace BalibotTest.MeasurementResolving
 {
     public static class MeasurementConversionHandler
-    {
-        private const string separator = "|";
-
+    {    
         public static List<string> AvailableMeasurementNames;
 
         public static Measurement TryConvertFrom(Measurement measurement)
@@ -56,23 +54,12 @@ namespace BalibotTest.MeasurementResolving
                 ("ft,feet", "m,meter,meters", 0.3054f, 0, true),
                 ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound", 2.2046f, 0, true),
-                ("km,kilometer,kilometers", "miles,mile,mi", 1.6093f, 0, true),
+                ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
                 ("$,dollar,dollars,usd", "euro,euros,eur", 0.92f, 0, false),
                 ("cad", "$", 0.76f, 0, false),
                 ("rsd", "$", 0.0093f, 0, false),
                 ("£", "$", 1.30f, 0, false),
                 
-                //memes
-                ("streamer,strimmer,broadcaster,boss lady", "ragnarokette", 1, 0, true),
-                ("gay","impasta",1,0,true),
-                ("bali,kem,veron,kestnutts,kestbutts,oferon,drake","nerd",1,0,false),
-                ("snivy","lily",1,0,true),
-                ("pocket monster","cuteness",1000,0,true),
-                ("bird,birds","flare",1,0,false),
-                ("perv",":sabergreeb:",1,0,false),
-                ("dad joke",":RageNarokette:",1,0,true),
-                ("starcraft","lifetime of pain",1,0,false),
-                ("week", "https://www.youtube.com/watch?v=fC_q9KPczAg",1,0,false)
             };
 
     }
