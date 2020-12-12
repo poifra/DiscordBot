@@ -1,27 +1,24 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using BaliBotDotNet.Services;
+using BaliBotDotNet.Utilities;
+using BalibotTest.MeasurementResolving;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Linq;
-using BaliBotDotNet.Services;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.IO;
 using System.Net.Http;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using System.Text.Json;
-using BaliBotDotNet.Utilities;
-using BalibotTest.MeasurementResolving;
+using System.Threading.Tasks;
 
 namespace BaliBotDotNet
 {
-    //flarence push test
     class Program
     {
         UOMConverter Converter = new UOMConverter();
 
-        static void Main(string[] args) {
+        static void Main(string[] args)
+        {
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
             new Program().MainAsync().GetAwaiter().GetResult();
         }
@@ -52,9 +49,10 @@ namespace BaliBotDotNet
                 return;
             }
 
-            var regexResult=MeasurementMessageHandler.TryConvertMessage(message.Content);
+            var regexResult = MeasurementMessageHandler.TryConvertMessage(message.Content);
 
-            if (regexResult != null) {
+            if (regexResult != null)
+            {
                 await message.Channel.SendMessageAsync(regexResult);
             }
         }

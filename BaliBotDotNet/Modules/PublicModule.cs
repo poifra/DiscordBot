@@ -2,7 +2,10 @@
 using Discord;
 using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Modules
@@ -100,6 +103,47 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync(user.ToString());
         }
 
+        [Command("wordcount")]
+        [Summary("Test")]
+        public async Task UserListAsync(int minimumLength = 1)
+        {
+            const int messageCount = 1000;
+            if(minimumLength <= 0)
+            {
+                await ReplyAsync("You must specify a minimum length greater than 0.");
+                return;
+            }
+
+            var messages =  await Context.Channel.GetMessagesAsync(messageCount).FlattenAsync();
+            messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
+            Dictionary<string, int> dict = new Dictionary<string, int>();
+            foreach(var m in messages)
+            {
+                IEnumerable<string> words = m.Content.Split(' ').ToList();                
+                words = words.Where(x => x.Length >= minimumLength);
+                foreach(var w in words)
+                {                   
+                    if(dict.ContainsKey(w))
+                    {
+                        dict[w]++;
+                    }
+                    else
+                    {
+                        dict[w] = 1;
+                    }
+                }
+            }
+            var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
+            if(string.IsNullOrEmpty(kv.Key))
+            {
+                await ReplyAsync($"There are no words with that are at least {minimumLength} letters long");
+            }
+            else
+            { 
+                await ReplyAsync($"The most common word in the last {messageCount} messages is \"{kv.Key}\" with {kv.Value} occurences"); 
+            }
+           
+        }
         [Command("logout")]
         [Summary("Logs out the bot.")]
         public async Task LogoutAsync2()
