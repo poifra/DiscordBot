@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -31,11 +30,6 @@ namespace BaliBotDotNet.Services
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat/gif");
                 }
-                //else if (word.StartsWith("says"))
-                //{
-                //    var phrase = string.Join(" ", word.Split(" ").Skip(1));
-                //    resp = await _http.GetAsync("https://cataas.com/cat/says/" + phrase);
-                //}
                 else
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat");

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace BaliBotDotNet.Utilities
+﻿namespace BaliBotDotNet.Utilities
 {
     public class UOMCode
     {
@@ -10,7 +6,7 @@ namespace BaliBotDotNet.Utilities
         protected UOMCode(string code)
         {
             Code = code;
-        }        
+        }
 
         public static readonly UOMCode Feet = new UOMCode("ft");
         public static readonly UOMCode Meter = new UOMCode("m");

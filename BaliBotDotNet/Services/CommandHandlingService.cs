@@ -40,7 +40,7 @@ namespace BaliBotDotNet.Services
             // This value holds the offset where the prefix ends
             var argPos = 0;
 
-            if (!message.HasCharPrefix(Prefix,ref argPos))
+            if (!message.HasCharPrefix(Prefix, ref argPos))
             {
                 return;
             }

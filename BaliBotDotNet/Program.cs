@@ -25,6 +25,7 @@ namespace BaliBotDotNet
 
         public async Task MainAsync()
         {
+            InitializeDB();
             using var services = ConfigureServices();
             var client = services.GetRequiredService<DiscordSocketClient>();
             client.Log += LogAsync;
@@ -40,8 +41,13 @@ namespace BaliBotDotNet
             //Initialize the logic required to register commands.
             await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
             await Task.Delay(-1);
-
         }
+
+        private void InitializeDB()
+        {
+            //  throw new NotImplementedException();
+        }
+
         private async Task MessageHandler(SocketMessage message)
         {
             if (message.Source != MessageSource.User) //bot doesnt reply to other bots (including itself)

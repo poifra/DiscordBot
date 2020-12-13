@@ -4,7 +4,7 @@ using System.Linq;
 namespace BalibotTest.MeasurementResolving
 {
     public static class MeasurementConversionHandler
-    {    
+    {
         public static List<string> AvailableMeasurementNames;
 
         public static Measurement TryConvertFrom(Measurement measurement)
@@ -59,7 +59,7 @@ namespace BalibotTest.MeasurementResolving
                 ("cad", "$", 0.76f, 0, false),
                 ("rsd", "$", 0.0093f, 0, false),
                 ("£", "$", 1.30f, 0, false),
-                
+
             };
 
     }
