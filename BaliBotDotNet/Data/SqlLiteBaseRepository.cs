@@ -29,16 +29,16 @@ namespace BaliBotDotNet.Model
             con.Open();
             con.Execute(@"
                     create table Author(
-                    AuthorID integer identity primary key autoincrement,
-                    Username varchar(max),
-                    DiscordID)");
+                    AuthorID integer primary key,
+                    Username text not null,
+                    DiscordID integer not null)");
 
             con.Execute(@"
                     create table Message(                    
-                    MessageID integer identity primary key autoincrement,
+                    MessageID integer primary key,
                     AuthorID integer not null,
                     GuildID integer not null,
-                    Content varchar(max) not null
+                    Content text not null,
                     foreign key(AuthorID) references Author(AuthorID));");
         }
     }

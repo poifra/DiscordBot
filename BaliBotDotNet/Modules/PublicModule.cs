@@ -1,4 +1,4 @@
-﻿using BaliBotDotNet.Model;
+﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Services;
 using Discord;
 using Discord.Commands;
@@ -14,6 +14,12 @@ namespace BaliBotDotNet.Modules
     {
         // Dependency Injection will fill this value in for us
         public WebService WebService { get; set; }
+        public IMessageRepository _messageRepository { get; set; }
+
+        public PublicModule(IMessageRepository messageRepository)
+        {
+            _messageRepository = messageRepository;
+        }
 
         [Command("ping")]
         [Alias("pong", "hello")]
@@ -113,28 +119,33 @@ namespace BaliBotDotNet.Modules
             }
 
             await ReplyAsync("Loading....");
+            const int messageCount = 10_000_000;
+            var channels = Context.Guild.TextChannels;
+            int numberOfProcessedMessages = 0;
+            
+            foreach (var channel in channels)
+            {
+                var messages = await channel.GetMessagesAsync(messageCount).FlattenAsync();
+                messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
+                _messageRepository.InsertBulkMessage(messages, Context.Guild);
+                numberOfProcessedMessages += messages.Count();
+            }
 
-            const int messageCount = 1_000_000;
-
-            var messages = await Context.Channel.GetMessagesAsync(messageCount).FlattenAsync();
-            messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
-            MessageRepository.InsertMessage(message);
-
+            await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
         [Command("wordcount", RunMode = RunMode.Async)]
         [Summary("Test")]
         public async Task WordCountAsync(int wordLength = 1)
         {
-            const int messageCount = 5_000;
+            //   return;
             if (wordLength <= 0)
             {
                 await ReplyAsync("You must specify a minimum length greater than 0.");
                 return;
             }
 
-            var messages = await Context.Channel.GetMessagesAsync(messageCount).FlattenAsync();
-            messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
+            var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
             Dictionary<string, int> dict = new Dictionary<string, int>();
             foreach (var m in messages)
             {
@@ -155,11 +166,11 @@ namespace BaliBotDotNet.Modules
             var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
             if (string.IsNullOrEmpty(kv.Key))
             {
-                await ReplyAsync($"There are no words with that are at least {wordLength} letters long.");
+                await ReplyAsync($"There are no words that are {wordLength} letters long.");
             }
             else
             {
-                await ReplyAsync($"The most common word with {wordLength} letters in the last {messageCount} messages is \"{kv.Key}\" with {kv.Value} occurences.");
+                await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
             }
 
         }

@@ -1,4 +1,6 @@
-﻿using BaliBotDotNet.Services;
+﻿using BaliBotDotNet.Data.Interfaces;
+using BaliBotDotNet.Model;
+using BaliBotDotNet.Services;
 using BaliBotDotNet.Utilities;
 using BalibotTest.MeasurementResolving;
 using Discord;
@@ -76,6 +78,7 @@ namespace BaliBotDotNet
                 .AddSingleton<CommandHandlingService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
+                .AddSingleton<IMessageRepository, MessageRepository>()
                 .BuildServiceProvider();
         }
     }
