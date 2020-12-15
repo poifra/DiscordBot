@@ -125,10 +125,18 @@ namespace BaliBotDotNet.Modules
             
             foreach (var channel in channels)
             {
-                var messages = await channel.GetMessagesAsync(messageCount).FlattenAsync();
-                messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
-                _messageRepository.InsertBulkMessage(messages, Context.Guild);
-                numberOfProcessedMessages += messages.Count();
+                IEnumerable<IMessage> messages = null;
+                try
+                {
+                    messages = await channel.GetMessagesAsync(messageCount).FlattenAsync();
+                    messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
+                    _messageRepository.InsertBulkMessage(messages, Context.Guild);
+                }
+                catch(Discord.Net.HttpException _)
+                {
+                    await ReplyAsync("I can't read " + channel.Name);
+                }
+                numberOfProcessedMessages += messages?.Count() ?? 0;
             }
 
             await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
@@ -142,6 +150,12 @@ namespace BaliBotDotNet.Modules
             if (wordLength <= 0)
             {
                 await ReplyAsync("You must specify a minimum length greater than 0.");
+                return;
+            }
+
+            if (Context.Message.Author.Username.Equals("Luneth"))
+            {
+                await ReplyAsync(MentionUtils.MentionUser(Context.Message.Author.Id) + " you can't use that!");
                 return;
             }
 
@@ -170,7 +184,16 @@ namespace BaliBotDotNet.Modules
             }
             else
             {
-                await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
+                ulong mention = 0;
+                if (MentionUtils.TryParseUser(kv.Key, out mention))
+                {
+                    await ReplyAsync("This would ping someone :(");
+                }
+                else
+                {
+                    await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences."); 
+                }
+                
             }
 
         }
