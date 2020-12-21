@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BaliBotDotNet.Model
 {
@@ -15,6 +16,25 @@ namespace BaliBotDotNet.Model
 
         }
 
+        public Dictionary<string, int> GetLeaderboard(ulong guildID, int maximum = 10)
+        {
+            var sql = "select count(*) as nb, a.Username from Message m " +
+                "inner join Author a on a.AuthorID = m.AuthorID " +
+                "where m.GuildID=@guildID " +
+                "group by m.AuthorID " +
+                "order by nb desc " +
+                "limit @maximum";
+            using var con = SqlLiteConnexion();
+            if (maximum > 20)
+            {
+                return new Dictionary<string, int>();
+            }
+            var parameters = new { guildID, maximum };
+            con.Open();
+            var result = con.Query(sql, parameters).ToDictionary(row => (string)row.Username, row => (int)row.nb);
+            return result;
+
+        }
         public List<Message> GetAllMessages(ulong guildID, ulong authorID = 0)
         {
             IEnumerable<Message> messageList;
@@ -48,7 +68,7 @@ namespace BaliBotDotNet.Model
 
         public void InsertMessage(IMessage discordMessage, SocketGuild guild, SqliteConnection con = null)
         {
-            if(con == null)
+            if (con == null)
             {
                 con = SqlLiteConnexion();
             }

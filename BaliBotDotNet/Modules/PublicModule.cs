@@ -1,8 +1,8 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Services;
+using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Commands;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -109,12 +109,25 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync(user.ToString());
         }
 
+        [Command("leaderboard")]
+        [Summary("Gets the leaderboard of most active users")]
+        public async Task LeaderboardAsync(int maximum = 10)
+        {
+            ulong guildID = Context.Guild.Id;
+            if (maximum > 20 || maximum < 1)
+            {
+                await ReplyAsync("Maximum must be between 1 and 20");
+            }
+            var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
+            await ReplyAsync(leaderboard.Select((kvPair, i) => $"# {i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
+        }
+
         [Command("reload", RunMode = RunMode.Async)]
         public async Task ReloadAsync()
         {
             if (!Context.Message.Author.Username.Equals("Bali"))
             {
-                await ReplyAsync(MentionUtils.MentionUser(Context.Message.Author.Id) + " you can't use that!");
+                await ReplyAsync($"{MentionUtils.MentionUser(Context.Message.Author.Id)} you can't use that!");
                 return;
             }
 
@@ -122,7 +135,7 @@ namespace BaliBotDotNet.Modules
             const int messageCount = 10_000_000;
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
-            
+
             foreach (var channel in channels)
             {
                 IEnumerable<IMessage> messages = null;
@@ -132,7 +145,7 @@ namespace BaliBotDotNet.Modules
                     messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
                     _messageRepository.InsertBulkMessage(messages, Context.Guild);
                 }
-                catch(Discord.Net.HttpException _)
+                catch (Discord.Net.HttpException)
                 {
                     await ReplyAsync("I can't read " + channel.Name);
                 }
@@ -155,7 +168,7 @@ namespace BaliBotDotNet.Modules
 
             if (Context.Message.Author.Username.Equals("Luneth"))
             {
-                await ReplyAsync(MentionUtils.MentionUser(Context.Message.Author.Id) + " you can't use that!");
+                await ReplyAsync($"{MentionUtils.MentionUser(Context.Message.Author.Id)} you can't use that!");
                 return;
             }
 
@@ -191,19 +204,11 @@ namespace BaliBotDotNet.Modules
                 }
                 else
                 {
-                    await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences."); 
+                    await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
                 }
-                
+
             }
 
-        }
-        [Command("logout")]
-        [Summary("Logs out the bot.")]
-        public async Task LogoutAsync2()
-        {
-            await ReplyAsync("Later nerds, I'm going to bed!");
-            await Context.Client.LogoutAsync();
-            Environment.Exit(0);
         }
     }
 }

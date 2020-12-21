@@ -2,11 +2,7 @@
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Data.Interfaces
 {
@@ -15,6 +11,8 @@ namespace BaliBotDotNet.Data.Interfaces
         void InsertMessage(IMessage message, SocketGuild guild, SqliteConnection con = null);
         void InsertBulkMessage(IEnumerable<IMessage> messages, SocketGuild guild);
         List<Message> GetAllMessages(ulong guildID, ulong authorID = 0);
-     
+        Dictionary<string, int> GetLeaderboard(ulong guildID, int maximum = 10);
+
+
     }
 }
