@@ -58,15 +58,13 @@ namespace BaliBotDotNet.Modules
                 }
                 numberOfProcessedMessages += messages?.Count() ?? 0;
             }
-
             await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
-        [Command("wordcount", RunMode = RunMode.Async)]
-        [Summary("Test")]
-        public async Task WordCountAsync(int wordLength = 1)
+        [Command("wordlength", RunMode = RunMode.Async)]
+        [Summary("Finds the most used word with the specified length")]
+        public async Task WordLengthAsync(int wordLength = 1)
         {
-            //   return;
             if (wordLength <= 0)
             {
                 await ReplyAsync("You must specify a minimum length greater than 0.");
@@ -79,24 +77,7 @@ namespace BaliBotDotNet.Modules
                 return;
             }
 
-            var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
-            Dictionary<string, int> dict = new Dictionary<string, int>();
-            foreach (var m in messages)
-            {
-                IEnumerable<string> words = m.Content.Split(' ').ToList();
-                words = words.Where(x => x.Length == wordLength);
-                foreach (var w in words)
-                {
-                    if (dict.ContainsKey(w))
-                    {
-                        dict[w]++;
-                    }
-                    else
-                    {
-                        dict[w] = 1;
-                    }
-                }
-            }
+            var dict = LoadMessages(wordLength);
             var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
             if (string.IsNullOrEmpty(kv.Key))
             {
@@ -112,9 +93,52 @@ namespace BaliBotDotNet.Modules
                 {
                     await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
                 }
-
             }
+        }
 
+        [Command("count")]
+        [Summary("Counts the number of occurences of a specified word")]
+        public async Task WordCountAsync(string word)
+        {
+            if(word.IsNullOrEmpty())
+            {
+                await ReplyAsync("You must specify a word to search.");
+            }
+            var dict = LoadMessages();
+            if(dict.TryGetValue(word, out int count))
+            {
+                await ReplyAsync($"The word \"{word}\" has been used {count} time(s).");
+            }
+            else
+            {
+                await ReplyAsync("That word was never used in this server.");
+            }
+        }
+
+        private Dictionary<string,int> LoadMessages(int wordLength = 0)
+        {
+            var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
+            Dictionary<string, int> dict = new Dictionary<string, int>();
+            foreach (var m in messages)
+            {
+                IEnumerable<string> words = m.Content.Split(' ').ToList();
+                if (wordLength != 0)
+                {
+                    words = words.Where(x => x.Length == wordLength);
+                }
+                foreach (var w in words)
+                {
+                    if (dict.ContainsKey(w))
+                    {
+                        dict[w]++;
+                    }
+                    else
+                    {
+                        dict[w] = 1;
+                    }
+                }
+            }
+            return dict;
         }
     }
 }
