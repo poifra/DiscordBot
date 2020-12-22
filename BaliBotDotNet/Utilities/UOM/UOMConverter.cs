@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace BaliBotDotNet.Utilities
+namespace BaliBotDotNet.Utilities.UOM
 {
     public class UOMConverter
     {

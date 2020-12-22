@@ -1,7 +1,7 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Model;
 using BaliBotDotNet.Services;
-using BaliBotDotNet.Utilities;
+using BaliBotDotNet.Utilities.UOM;
 using BalibotTest.MeasurementResolving;
 using Discord;
 using Discord.Commands;

@@ -1,4 +1,4 @@
-﻿namespace BaliBotDotNet.Utilities
+﻿namespace BaliBotDotNet.Utilities.UOM
 {
     public class UOMCode
     {
