@@ -18,7 +18,7 @@ namespace BaliBotDotNet
     class Program
     {
         UOMConverter Converter = new UOMConverter();
-
+        IMessageRepository _messageRepository;
         static void Main(string[] args)
         {
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
@@ -47,7 +47,7 @@ namespace BaliBotDotNet
 
         private void InitializeDB()
         {
-            //  throw new NotImplementedException();
+            _messageRepository = new MessageRepository();
         }
 
         private async Task MessageHandler(SocketMessage message)
@@ -55,6 +55,12 @@ namespace BaliBotDotNet
             if (message.Source != MessageSource.User) //bot doesnt reply to other bots (including itself)
             {
                 return;
+            }
+
+            if (!message.Content.StartsWith("$"))
+            {
+                SocketGuild guild = ((SocketGuildChannel)message.Channel).Guild;
+                _messageRepository.InsertMessage(message, guild);
             }
 
             var regexResult = MeasurementMessageHandler.TryConvertMessage(message.Content);

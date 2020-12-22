@@ -16,9 +16,17 @@ namespace BaliBotDotNet.Modules
             _service = service;
         }
 
-        [Command("help")]
+        [Command("userinfo")]
+        [Summary("Get info on a user, or the user who invoked the command if one is not specified")]
+        public async Task UserInfoAsync(IUser user = null)
+        {
+            user ??= Context.User;
+            await ReplyAsync(user.ToString());
+        }
+
+        [Command("commands")]
         [Summary("Display available commands")]
-        public async Task HelpAsync()
+        public async Task CommandListAsync()
         {
             var builder = new EmbedBuilder()
             {

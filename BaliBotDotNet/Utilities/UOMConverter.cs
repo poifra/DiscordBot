@@ -20,12 +20,12 @@ namespace BaliBotDotNet.Utilities
             }
             return newValue;
         }
-        private double ConvertToBase(double value, UOM uom)
+        private static double ConvertToBase(double value, UOM uom)
         {
             return (value + uom.Offset) * uom.Ratio;
         }
 
-        private double ConvertFromBase(double value, UOM uom)
+        private static double ConvertFromBase(double value, UOM uom)
         {
             return value / uom.Ratio - uom.Offset;
         }

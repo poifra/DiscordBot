@@ -1,112 +1,19 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
-using BaliBotDotNet.Services;
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Commands;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Modules
 {
-    public class PublicModule : ModuleBase<SocketCommandContext>
+    public class WordModule : ModuleBase<SocketCommandContext>
     {
-        // Dependency Injection will fill this value in for us
-        public WebService WebService { get; set; }
-        public IMessageRepository _messageRepository { get; set; }
-
-        public PublicModule(IMessageRepository messageRepository)
+        private IMessageRepository _messageRepository;
+        public WordModule(IMessageRepository messageRepository)
         {
             _messageRepository = messageRepository;
-        }
-
-        [Command("ping")]
-        [Alias("pong", "hello")]
-        public Task PingAsync()
-            => ReplyAsync("pong!");
-
-        [Command("cat")]
-        [Summary("Gets a cat picture")]
-        public async Task CatAsync(string word = "")
-        {
-            var stream = await WebService.GetCatPictureAsync(word);
-            if (stream == null)
-            {
-                await Context.Channel.SendMessageAsync("Cat API timed out :(");
-                return;
-            }
-            // Streams must be seeked to beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            if (word.Equals("gif"))
-            {
-                await Context.Channel.SendFileAsync(stream, "cat.gif");
-            }
-            else
-            {
-                await Context.Channel.SendFileAsync(stream, "cat.png");
-            }
-        }
-
-        [Command("dog")]
-        [Summary("joke")]
-        public async Task DogAsync()
-        {
-            var stream = await WebService.GetDogPictureAsync();
-            if (stream == null)
-            {
-                await Context.Channel.SendMessageAsync("Dog API timed out :(");
-                return;
-            }
-            // Streams must be seeked to beginning before being uploaded!
-            stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "dog.png");
-        }
-
-        [Command("xkcd")]
-        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" is specified as ID.")]
-        public async Task XKCDAsync(string xkcdID = null)
-        {
-            XKCDContainer container;
-
-            if (xkcdID == null)
-            {
-                container = await WebService.GetXKCDAsync(null, true);
-            }
-            else if (xkcdID == "last")
-            {
-                container = await WebService.GetXKCDAsync(null);
-            }
-            else if (!int.TryParse(xkcdID, out int id) || id < 1)
-            {
-                await Context.Channel.SendMessageAsync($"{xkcdID} is not a valid XKCD comic ID.");
-                return;
-            }
-            else
-            {
-                container = await WebService.GetXKCDAsync(id);
-            }
-
-            if (container == null)
-            {
-                await Context.Channel.SendMessageAsync($"There is no comic matching id {xkcdID}");
-            }
-            else
-            {
-                // Streams must be seeked to beginning before being uploaded!
-                container.Image.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendMessageAsync("#" + container.ID + ": " + container.Title);
-                await Context.Channel.SendFileAsync(container.Image, "xkcd.png");
-                await Context.Channel.SendMessageAsync("Alt text: " + container.AltText);
-            }
-        }
-
-        [Command("userinfo")]
-        [Summary("Get info on a user, or the user who invoked the command if one is not specified")]
-        public async Task UserInfoAsync(IUser user = null)
-        {
-            user ??= Context.User;
-            await ReplyAsync(user.ToString());
         }
 
         [Command("leaderboard")]
@@ -119,7 +26,7 @@ namespace BaliBotDotNet.Modules
                 await ReplyAsync("Maximum must be between 1 and 20");
             }
             var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
-            await ReplyAsync(leaderboard.Select((kvPair, i) => $"# {i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
+            await ReplyAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
         }
 
         [Command("reload", RunMode = RunMode.Async)]
@@ -197,8 +104,7 @@ namespace BaliBotDotNet.Modules
             }
             else
             {
-                ulong mention = 0;
-                if (MentionUtils.TryParseUser(kv.Key, out mention))
+                if (MentionUtils.TryParseUser(kv.Key, out ulong mention))
                 {
                     await ReplyAsync("This would ping someone :(");
                 }
