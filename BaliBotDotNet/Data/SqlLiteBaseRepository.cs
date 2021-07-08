@@ -3,19 +3,27 @@ using Microsoft.Data.Sqlite;
 using System;
 using System.IO;
 
-namespace BaliBotDotNet.Model
+namespace BaliBotDotNet.Data
 {
     public class SqlLiteBaseRepository
     {
+        private static SqliteConnection _connection = null;
+        public static SqliteConnection SqlCon
+        {
+            get
+            {
+                if (_connection == null)
+                {
+                    _connection = new SqliteConnection("Data Source=" + DbFile);
+                }
+                return _connection;
+            }
+        }
         public static string DbFile
         {
             get { return Environment.CurrentDirectory + "\\BaliBotDB.sqlite"; }
         }
 
-        public static SqliteConnection SqlLiteConnexion()
-        {
-            return new SqliteConnection("Data Source=" + DbFile);
-        }
         internal SqlLiteBaseRepository()
         {
             if (!File.Exists(DbFile))
@@ -25,7 +33,7 @@ namespace BaliBotDotNet.Model
         }
         private static void CreateDatabase()
         {
-            using var con = SqlLiteConnexion();
+            using var con = SqlCon;
             con.Open();
             con.Execute(@"
                     create table Author(
@@ -40,6 +48,16 @@ namespace BaliBotDotNet.Model
                     GuildID integer not null,
                     Content text not null,
                     foreign key(AuthorID) references Author(AuthorID));");
+
+            con.Execute(@"
+                   create table Reminder(
+                   ReminderID integer primary key,
+                   AuthorID integer not null,
+                   ChannelID integer not null,
+                   ReminderText text not null,
+                   ReminderTime text not null,
+                   IsReminderDone integer not null default 0);
+            ");
         }
     }
 }

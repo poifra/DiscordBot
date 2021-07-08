@@ -100,12 +100,12 @@ namespace BaliBotDotNet.Modules
         [Summary("Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)
         {
-            if(word.IsNullOrEmpty())
+            if (word.IsNullOrEmpty())
             {
                 await ReplyAsync("You must specify a word to search.");
             }
             var dict = LoadMessages();
-            if(dict.TryGetValue(word, out int count))
+            if (dict.TryGetValue(word, out int count))
             {
                 await ReplyAsync($"The word \"{word}\" has been used {count} time(s).");
             }
@@ -115,7 +115,7 @@ namespace BaliBotDotNet.Modules
             }
         }
 
-        private Dictionary<string,int> LoadMessages(int wordLength = 0)
+        private Dictionary<string, int> LoadMessages(int wordLength = 0)
         {
             var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
             Dictionary<string, int> dict = new Dictionary<string, int>();

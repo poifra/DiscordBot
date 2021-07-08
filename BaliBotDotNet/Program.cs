@@ -1,4 +1,5 @@
-﻿using BaliBotDotNet.Data.Interfaces;
+﻿using BaliBotDotNet.Data;
+using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Model;
 using BaliBotDotNet.Services;
 using BaliBotDotNet.Utilities.UOM;
@@ -85,6 +86,7 @@ namespace BaliBotDotNet
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
                 .AddSingleton<IMessageRepository, MessageRepository>()
+                .AddSingleton<IReminderRepository, ReminderRepository>()
                 .BuildServiceProvider();
         }
     }

@@ -55,10 +55,10 @@ namespace BalibotTest.MeasurementResolving
                 ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound", 2.2046f, 0, true),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
-                ("$,dollar,dollars,usd", "euro,euros,eur", 0.92f, 0, false),
-                ("cad", "$", 0.76f, 0, false),
-                ("rsd", "$", 0.0093f, 0, false),
-                ("£", "$", 1.30f, 0, false),
+                ("$,dollar,dollars,usd", "euro,euros,eur", 0.68f, 0, false),
+                ("cad", "$", 0.81f, 0, false),
+                ("rsd", "$", 0.010f, 0, false),
+                ("£", "$", 1.40f, 0, false),
 
             };
 

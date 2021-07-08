@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -80,6 +81,20 @@ namespace BaliBotDotNet.Services
                 Title = title,
             };
             return container;
+        }
+
+        internal async Task<string> GetDadJokeAsync()
+        {
+            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var jsonResponse = await _http.GetAsync("https://icanhazdadjoke.com/");
+            if(!jsonResponse.IsSuccessStatusCode)
+            {
+                return null;
+            }
+            //string body = await jsonResponse.Content.ReadAsStringAsync();
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            return document.RootElement.GetProperty("joke").ToString();
+        //    return "";
         }
     }
 

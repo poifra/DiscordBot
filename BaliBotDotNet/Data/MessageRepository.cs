@@ -1,4 +1,5 @@
-﻿using BaliBotDotNet.Data.Interfaces;
+﻿using BaliBotDotNet.Data;
+using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
 using Dapper;
 using Discord;
@@ -24,7 +25,7 @@ namespace BaliBotDotNet.Model
                 "group by m.AuthorID " +
                 "order by nb desc " +
                 "limit @maximum";
-            using var con = SqlLiteConnexion();
+            using var con = SqlCon;
             if (maximum > 20)
             {
                 return new Dictionary<string, int>();
@@ -38,7 +39,7 @@ namespace BaliBotDotNet.Model
         public List<Message> GetAllMessages(ulong guildID, ulong authorID = 0)
         {
             IEnumerable<Message> messageList;
-            using var con = SqlLiteConnexion();
+            using var con = SqlCon;
             var sql = "SELECT * FROM Message WHERE GuildID=@GuildID ";
             if (authorID != 0)
             {
@@ -56,7 +57,7 @@ namespace BaliBotDotNet.Model
 
         public void InsertBulkMessage(IEnumerable<IMessage> messages, SocketGuild guild)
         {
-            using var con = SqlLiteConnexion();
+            using var con = SqlCon;
             con.Open();
             var transation = con.BeginTransaction();
             foreach (var message in messages)
@@ -70,7 +71,7 @@ namespace BaliBotDotNet.Model
         {
             if (con == null)
             {
-                con = SqlLiteConnexion();
+                con = SqlCon;
             }
             var sqlMessage = "INSERT OR IGNORE INTO Message (MessageID, AuthorID, GuildID, Content) VALUES (@MessageID, @AuthorID, @GuildID, @Content)";
             var sqlAuthor = "INSERT OR IGNORE INTO Author (AuthorID, Username, DiscordID) VALUES (@AuthorID, @Username, @DiscordID)";
