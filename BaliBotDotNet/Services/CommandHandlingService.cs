@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace BaliBotDotNet.Services
 {
@@ -14,15 +15,26 @@ namespace BaliBotDotNet.Services
         private readonly DiscordSocketClient _discord;
         private readonly IServiceProvider _services;
         public const char Prefix = '$';
+        private Timer _timer;
+        private bool _canUseCommand;
 
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _services = services;
+            _timer = new Timer(60 * 1000);
+            _canUseCommand = true;
+            _timer.Elapsed += ResetLimit;
 
             _commands.CommandExecuted += CommandExecutedAsync;
             _discord.MessageReceived += MessageReceivedAsync;
+        }
+
+        private void ResetLimit(object sender, ElapsedEventArgs e)
+        {
+            _canUseCommand = true;
+            _timer.Stop();
         }
 
         public async Task InitializeAsync()
@@ -51,7 +63,13 @@ namespace BaliBotDotNet.Services
             }
 
             var context = new SocketCommandContext(_discord, message);
-            await _commands.ExecuteAsync(context, argPos, _services);
+
+            if (_canUseCommand)
+            {
+                await _commands.ExecuteAsync(context, argPos, _services);
+                _canUseCommand = false;
+                _timer.Start();
+            }
         }
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command, ICommandContext context, IResult result)
