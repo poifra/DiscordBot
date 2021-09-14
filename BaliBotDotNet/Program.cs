@@ -57,7 +57,6 @@ namespace BaliBotDotNet
             {
                 return;
             }
-
             if (!message.Content.StartsWith("$"))
             {
                 SocketGuild guild = ((SocketGuildChannel)message.Channel).Guild;

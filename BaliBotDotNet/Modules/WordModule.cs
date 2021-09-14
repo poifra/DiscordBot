@@ -29,6 +29,15 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
         }
 
+        [Command("messagecount")]
+        [Summary("Gets the message count of the user who calls the command")]
+        public async Task MessageCountAsync()
+        {
+            ulong authorID = Context.User.Id;
+            var leaderboard = _messageRepository.GetAllMessages(Context.Guild.Id, authorID);
+            await ReplyAsync($"You sent {leaderboard.Count} messages.");
+        }
+
         [Command("reload", RunMode = RunMode.Async)]
         public async Task ReloadAsync()
         {

@@ -40,7 +40,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("dog")]
-        [Summary("joke")]
+        [Summary("Woof")]
         public async Task DogAsync()
         {
             var stream = await WebService.GetDogPictureAsync();
@@ -52,6 +52,38 @@ namespace BaliBotDotNet.Modules
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
             await Context.Channel.SendFileAsync(stream, "dog.png");
+        }
+
+
+        [Command("duck")]
+        [Summary("Quack")]
+        public async Task DuckAsync()
+        {
+            var stream = await WebService.GetDuckPictureAsync();
+            if (stream == null)
+            {
+                await Context.Channel.SendMessageAsync("Duck API timed out :(");
+                return;
+            }
+            // Streams must be seeked to beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "duck.png");
+        }
+
+
+        [Command("fox")]
+        [Summary("Floof")]
+        public async Task FoxAsync()
+        {
+            var stream = await WebService.GetFoxPictureAsync();
+            if (stream == null)
+            {
+                await Context.Channel.SendMessageAsync("Fox API timed out :(");
+                return;
+            }
+            // Streams must be seeked to beginning before being uploaded!
+            stream.Seek(0, SeekOrigin.Begin);
+            await Context.Channel.SendFileAsync(stream, "fox.png");
         }
 
         [Command("dadjoke")]

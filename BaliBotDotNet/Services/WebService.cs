@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -10,13 +11,16 @@ namespace BaliBotDotNet.Services
     public class WebService
     {
         private readonly HttpClient _http;
-
+        private Dictionary<string, Func<Task<Stream>>> _animals;
         public WebService(HttpClient http)
         {
             _http = http;
             _http.Timeout = TimeSpan.FromSeconds(3);
+            _animals = new Dictionary<string, Func<Task<Stream>>>
+            {
+                { "duck", GetDuckPictureAsync }
+            };
         }
-
 
         internal async Task<Stream> GetCatPictureAsync(string word = "")
         {
@@ -48,6 +52,22 @@ namespace BaliBotDotNet.Services
             var jsonResponse = await _http.GetAsync("https://dog.ceo/api/breeds/image/random");
             using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
             var image = await (await _http.GetAsync(document.RootElement.GetProperty("message").GetString())).Content.ReadAsStreamAsync();
+            return image;
+        }
+
+        internal async Task<Stream> GetDuckPictureAsync()
+        {
+            var jsonResponse = await _http.GetAsync("https://random-d.uk/api/v2/random");
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            var image = await (await _http.GetAsync(document.RootElement.GetProperty("url").GetString())).Content.ReadAsStreamAsync();
+            return image;
+        }
+
+        internal async Task<Stream> GetFoxPictureAsync()
+        {
+            var jsonResponse = await _http.GetAsync("https://randomfox.ca/floof/");
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            var image = await (await _http.GetAsync(document.RootElement.GetProperty("image").GetString())).Content.ReadAsStreamAsync();
             return image;
         }
 

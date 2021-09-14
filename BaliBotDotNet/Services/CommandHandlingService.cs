@@ -45,6 +45,11 @@ namespace BaliBotDotNet.Services
                 return;
             }
 
+            if (message.Author.ToString().Equals("subpixelmaster4000#4495"))
+            {
+                return;
+            }
+
             var context = new SocketCommandContext(_discord, message);
             await _commands.ExecuteAsync(context, argPos, _services);
         }

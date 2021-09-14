@@ -52,6 +52,7 @@ namespace BalibotTest.MeasurementResolving
             new List<(string, string, float, float, bool)> {
 
                 ("ft,feet", "m,meter,meters", 0.3054f, 0, true),
+                ("inch,inches","cm",2.54f,0,true),
                 ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound", 2.2046f, 0, true),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
