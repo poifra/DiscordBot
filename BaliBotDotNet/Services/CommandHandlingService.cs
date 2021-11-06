@@ -64,7 +64,8 @@ namespace BaliBotDotNet.Services
 
             var context = new SocketCommandContext(_discord, message);
 
-            if (_canUseCommand)
+            bool isDebug = false;
+            if (_canUseCommand || isDebug)
             {
                 await _commands.ExecuteAsync(context, argPos, _services);
                 _canUseCommand = false;

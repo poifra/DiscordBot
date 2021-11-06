@@ -107,14 +107,12 @@ namespace BaliBotDotNet.Services
         {
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             var jsonResponse = await _http.GetAsync("https://icanhazdadjoke.com/");
-            if(!jsonResponse.IsSuccessStatusCode)
+            if (!jsonResponse.IsSuccessStatusCode)
             {
                 return null;
             }
-            //string body = await jsonResponse.Content.ReadAsStringAsync();
             using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
             return document.RootElement.GetProperty("joke").ToString();
-        //    return "";
         }
     }
 
