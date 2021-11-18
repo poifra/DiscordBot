@@ -53,6 +53,8 @@ namespace BaliBotDotNet.Modules
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
 
+            _messageRepository.DropMessages(Context.Guild.Id);
+
             foreach (var channel in channels)
             {
                 IEnumerable<IMessage> messages = null;

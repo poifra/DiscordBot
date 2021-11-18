@@ -98,5 +98,14 @@ namespace BaliBotDotNet.Model
             con.Execute(sqlAuthor, authorParameters);
             con.Execute(sqlMessage, messageParameters);
         }
+
+        public void DropMessages(ulong serverID)
+        {
+            using var con = SqlCon;
+            con.Open();
+            var sql = "DELETE FROM Message WHERE GuildID=@GuildID";
+            var sqlParams = new { GuildID = serverID };
+            con.Execute(sql, sqlParams);
+        }
     }
 }
