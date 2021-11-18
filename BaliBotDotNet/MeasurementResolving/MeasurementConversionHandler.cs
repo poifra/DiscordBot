@@ -47,20 +47,19 @@ namespace BalibotTest.MeasurementResolving
             }
         }
 
-        private static List<(string first, string second,
+        private static readonly List<(string first, string second,
             float conversionRate, float offset, bool isExact)> ConversionValues =
-            new List<(string, string, float, float, bool)> {
-
+            new()
+            {
                 ("ft,feet", "m,meter,meters", 0.3054f, 0, true),
-                ("inch,inches","cm",2.54f,0,true),
+                ("inch,inches", "cm", 2.54f, 0, true),
                 ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
-                ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound", 2.2046f, 0, true),
+                ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, true),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
-                ("$,dollar,dollars,usd", "euro,euros,eur", 0.68f, 0, false),
-                ("cad", "$", 0.81f, 0, false),
-                ("rsd", "$", 0.010f, 0, false),
-                ("£", "$", 1.40f, 0, false),
-
+                ("$,dollar,dollars,usd", "euro,euros,eur", 0.86f, 0, false),
+                ("cad", "$", 0.80f, 0, false),
+                ("rsd", "$", 0.0099f, 0, false),
+                ("£", "$", 1.36f, 0, false),
             };
 
     }

@@ -23,9 +23,9 @@ namespace BaliBotDotNet.Modules
         [Summary("Get info on a user, or the user who invoked the command if one is not specified")]
         public async Task UserInfoAsync(IUser usr = null)
         {
-            SocketGuildUser user = Context.Guild.Users.First(x => x.Id == (usr??Context.User).Id);
-            var client = new HttpClient();          
-            var avatar = user.GetAvatarUrl(size:256) ?? user.GetDefaultAvatarUrl();
+            SocketGuildUser user = Context.Guild.Users.First(x => x.Id == (usr ?? Context.User).Id);
+            var client = new HttpClient();
+            var avatar = user.GetAvatarUrl(size: 256) ?? user.GetDefaultAvatarUrl();
             Stream response = await client.GetStreamAsync(avatar);
             await ReplyAsync(user.ToString());
             await ReplyAsync($"Created on : {user.CreatedAt.ToUniversalTime()}");

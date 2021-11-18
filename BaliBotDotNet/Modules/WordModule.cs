@@ -2,6 +2,7 @@
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Commands;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,6 +52,8 @@ namespace BaliBotDotNet.Modules
             const int messageCount = 10_000_000;
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
+
+            _messageRepository.DropMessages(Context.Guild.Id);
 
             foreach (var channel in channels)
             {
@@ -103,6 +106,29 @@ namespace BaliBotDotNet.Modules
                     await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
                 }
             }
+        }
+        [Command("choose")]
+        [Summary("Picks one")]
+        public async Task Choose(params string[] choices)
+        {
+            Random rng = new Random();
+            int n = choices.Length;
+            if (n == 0)
+            {
+                await ReplyAsync("You must specify at least one thing.");
+                return;
+            }
+            int pick = rng.Next(0, n);
+            await ReplyAsync(choices[pick]);
+        }
+
+        [Command("coinflip")]
+        [Summary("Heads or tails")]
+        public async Task CoinFlip()
+        {
+            Random rng = new();
+            string answer = rng.Next(0, 2) % 2 == 0 ? "heads" : "tails";
+            await ReplyAsync($"{answer}");
         }
 
         [Command("count")]

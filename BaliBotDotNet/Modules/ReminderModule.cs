@@ -16,7 +16,7 @@ namespace BaliBotDotNet.Modules
         {
             _reminderRepository = reminderRepository;
             _client = client;
-            Timer t = new Timer(1000*60);
+            Timer t = new Timer(1000 * 60);
             t.Elapsed += CheckForReminders;
             t.Start();
         }
