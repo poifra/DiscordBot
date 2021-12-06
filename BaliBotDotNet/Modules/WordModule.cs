@@ -112,6 +112,12 @@ namespace BaliBotDotNet.Modules
         public async Task Choose(params string[] choices)
         {
             Random rng = new Random();
+            Random cringeRNG = new Random();
+            if (cringeRNG.Next(0, 1000) == 420)
+            {
+                await ReplyAsync("lol cringe");
+                return;
+            }
             int n = choices.Length;
             if (n == 0)
             {

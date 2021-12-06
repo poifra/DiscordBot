@@ -18,7 +18,7 @@ namespace BaliBotDotNet.Services
         private readonly IServiceProvider _services;
         public const char Prefix = '$';
         private readonly Dictionary<ulong, TimerContext> _timerContextByServerID;
-
+        private const int delay_in_seconds = 30;
         public CommandHandlingService(IServiceProvider services)
         {
             _commands = services.GetRequiredService<CommandService>();
@@ -62,18 +62,18 @@ namespace BaliBotDotNet.Services
             }
 
             var context = new SocketCommandContext(_discord, message);
-            ulong serverID = context.Guild.Id;
-
-            var rng = new Random();
-            int n = rng.Next(0, 10_001);
-            if (n == 10_000)
+            IResult result;
+            if(context.IsPrivate) //no need for a cooldown in DMs
             {
-                await context.Channel.SendMessageAsync("lol cringe");
+                result = await _commands.ExecuteAsync(context, argPos, _services);
+                return;
             }
+
+            ulong serverID = context.Guild.Id;
 
             if (!_timerContextByServerID.ContainsKey(serverID))
             {
-                var timerInstance = new TimerContext { CanUseCommand = true, ServerID = serverID, Interval = 60 * 1000 };
+                var timerInstance = new TimerContext { CanUseCommand = true, ServerID = serverID, Interval = delay_in_seconds * 1000 };
                 timerInstance.Elapsed += ResetLimit;
                 _timerContextByServerID[serverID] = timerInstance;
             }
@@ -82,15 +82,16 @@ namespace BaliBotDotNet.Services
             if (!_timerContextByServerID[serverID].CanUseCommand && !isDebug) // always execute commands if isDebug is set to true
             {
                 var dm = await context.User.GetOrCreateDMChannelAsync();
-                await dm.SendMessageAsync($"The bot is on cooldown! Please wait at least one minute");
+                await dm.SendMessageAsync($"The bot is on cooldown! Please wait {delay_in_seconds - (DateTime.Now -_timerContextByServerID[serverID].StartTime).TotalSeconds} seconds before using a command.");
                 return;
             }
-
-            var result = await _commands.ExecuteAsync(context, argPos, _services);
+            
+            result = await _commands.ExecuteAsync(context, argPos, _services);
             if (result.IsSuccess)
             {
                 _timerContextByServerID[serverID].Start();
                 _timerContextByServerID[serverID].CanUseCommand = false;
+                _timerContextByServerID[serverID].StartTime = DateTime.Now;
             }
         }
 

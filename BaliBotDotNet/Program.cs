@@ -33,10 +33,9 @@ namespace BaliBotDotNet
             var client = services.GetRequiredService<DiscordSocketClient>();
             client.Log += LogAsync;
             client.MessageReceived += MessageHandler;
-
             services.GetRequiredService<CommandService>().Log += LogAsync;
 
-            using var document = JsonDocument.Parse(File.ReadAllText("../../../config.json"));
+            using var document = JsonDocument.Parse(File.ReadAllText(Environment.CurrentDirectory+"\\config.json"));
             string token = document.RootElement.GetProperty("token").GetString();
             await client.LoginAsync(TokenType.Bot, token);
             await client.StartAsync();
@@ -59,8 +58,11 @@ namespace BaliBotDotNet
             }
             if (!message.Content.StartsWith("$"))
             {
-                SocketGuild guild = ((SocketGuildChannel)message.Channel).Guild;
-                _messageRepository.InsertMessage(message, guild);
+                SocketGuild guild = (message.Channel as SocketGuildChannel)?.Guild;
+                if (guild != null) // if its not a dm
+                {
+                    _messageRepository.InsertMessage(message, guild);
+                }
             }
 
             var regexResult = MeasurementMessageHandler.TryConvertMessage(message.Content);

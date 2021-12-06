@@ -1,6 +1,7 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Services;
 using Discord.Commands;
+using System;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -15,6 +16,21 @@ namespace BaliBotDotNet.Modules
         public WebModule(IMessageRepository messageRepository)
         {
             _messageRepository = messageRepository;
+        }
+
+        [Command("convertcurrency")]
+        [Summary("Converts from currency A to currency B")]
+        public async Task ConvertAsync(float amount, string source, string destination)
+        {
+            var rate = await WebService.GetConversionRateAsync(source, destination);
+            if (rate == null)
+            {
+                await Context.Channel.SendMessageAsync("Invalid currency");
+            }
+            else
+            {
+                await Context.Channel.SendMessageAsync($"{amount} {source} is {string.Format("{0:0.00}", (amount*rate))} {destination}");
+            }
         }
 
         [Command("cat")]

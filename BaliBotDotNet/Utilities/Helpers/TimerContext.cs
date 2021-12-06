@@ -1,4 +1,5 @@
-﻿using System.Timers;
+﻿using System;
+using System.Timers;
 
 namespace BaliBotDotNet.Utilities.Helpers
 {
@@ -6,5 +7,6 @@ namespace BaliBotDotNet.Utilities.Helpers
     {
         public ulong ServerID { get; set; }
         public bool CanUseCommand { get; set; }
+        public DateTime StartTime { get; set; }
     }
 }

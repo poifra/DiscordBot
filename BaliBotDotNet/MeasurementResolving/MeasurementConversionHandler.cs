@@ -56,10 +56,6 @@ namespace BalibotTest.MeasurementResolving
                 ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, true),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
-                ("$,dollar,dollars,usd", "euro,euros,eur", 0.86f, 0, false),
-                ("cad", "$", 0.80f, 0, false),
-                ("rsd", "$", 0.0099f, 0, false),
-                ("£", "$", 1.36f, 0, false),
             };
 
     }

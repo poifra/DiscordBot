@@ -21,6 +21,24 @@ namespace BaliBotDotNet.Modules
             t.Start();
         }
 
+        [Command("deletereminder", RunMode = RunMode.Async)]
+        public async Task DeleteReminderAsync(int reminderID)
+        {
+            var reminder = _reminderRepository.GetReminder(reminderID);
+            if (reminder == null)
+            {
+                await ReplyAsync("There is no reminder with that ID!");
+                return;
+            }
+            if(Context.Message.Author.Id != reminder.AuthorID)
+            {
+                await ReplyAsync("You cannot delete someone else's reminder!");
+                return;
+            }
+            _reminderRepository.DeleteReminder(reminderID);
+            await ReplyAsync($"Deleted reminder \"{reminder.ReminderText}\"");
+        }
+
         [Command("reminder", RunMode = RunMode.Async)]
         public async Task CreateReminderAsync(int amount, string unit, string text)
         {
@@ -47,8 +65,8 @@ namespace BaliBotDotNet.Modules
                     return;
 
             }
-            _reminderRepository.InsertReminder(Context.Message.Author.Id, Context.Channel.Id, remindDate, text);
-            await ReplyAsync($"I will remind you of this in {amount} {unit}");
+            int id = _reminderRepository.InsertReminder(Context.Message.Author.Id, Context.Channel.Id, remindDate, text);
+            await ReplyAsync($"I will remind you of this in {amount} {unit}. If you want to delete it in the future, use `$deletereminder {id}`.");
 
         }
 

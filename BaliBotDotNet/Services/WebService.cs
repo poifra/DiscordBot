@@ -71,6 +71,30 @@ namespace BaliBotDotNet.Services
             return image;
         }
 
+        internal async Task<float?> GetConversionRateAsync(string source, string destination)
+        {
+            using var jsonConfig = JsonDocument.Parse(File.ReadAllText(Environment.CurrentDirectory + "\\config.json"));
+            string token = jsonConfig.RootElement.GetProperty("currencyKey").GetString();
+
+            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            string conversion = $"{source.ToUpper()}_{destination.ToUpper()}";
+            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v5/convert?q={conversion}&compact=y&apiKey={token}");
+            if (!jsonResponse.IsSuccessStatusCode)
+            {
+                return null;
+            }
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            try
+            {
+                return float.Parse(document.RootElement.GetProperty(conversion).GetProperty("val").ToString());
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+
+        }
+
         internal async Task<XKCDContainer> GetXKCDAsync(int? id, bool getRandom = false)
         {
             var rng = new Random();

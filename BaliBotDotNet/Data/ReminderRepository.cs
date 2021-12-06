@@ -3,6 +3,7 @@ using BaliBotDotNet.Models;
 using Dapper;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BaliBotDotNet.Data
 {
@@ -20,7 +21,32 @@ namespace BaliBotDotNet.Data
             return reminders.AsList();
         }
 
-        public void InsertReminder(ulong authorID, ulong channelID, DateTime reminderDate, string reminderText)
+        public void DeleteReminder(int reminderID)
+        {
+            using var con = SqlCon;
+            con.Open();
+            var sqlUpdate = "DELETE FROM Reminder WHERE ReminderID=@ReminderID;";
+            var updateParameters = new
+            {
+                ReminderID = reminderID,
+            };
+            con.Execute(sqlUpdate, updateParameters);
+        }
+
+        public Reminder GetReminder(int reminderID)
+        {
+            using var con = SqlCon;
+            con.Open();
+            var sqlUpdate = "SELECT * FROM Reminder WHERE ReminderID=@ReminderID;";
+            var updateParameters = new
+            {
+                ReminderID = reminderID,
+            };
+            var reminder = con.Query<Reminder>(sqlUpdate, updateParameters).FirstOrDefault();
+            return reminder;
+        }
+
+        public int InsertReminder(ulong authorID, ulong channelID, DateTime reminderDate, string reminderText)
         {
             using var con = SqlCon;
             con.Open();
@@ -33,6 +59,7 @@ namespace BaliBotDotNet.Data
                 ReminderTime = reminderDate.ToString()
             };
             con.Execute(sqlInsert, reminderParameters);
+            return con.QueryFirst<int>("SELECT last_insert_rowid();");
         }
 
         public void SetReminderDone(int reminderID)
