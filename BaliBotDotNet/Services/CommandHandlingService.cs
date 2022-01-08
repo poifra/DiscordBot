@@ -51,6 +51,18 @@ namespace BaliBotDotNet.Services
             // This value holds the offset where the prefix ends
             var argPos = 0;
 
+            var text = message.Content.ToLower();
+            if (text.Contains("i'm"))
+            {
+                var rng = new Random();
+                if (rng.Next(1000) == 420)
+                {
+                    var dadJokeIndex = text.IndexOf("i'm");
+                    var name = text[(dadJokeIndex + 4)..];
+                    await rawMessage.Channel.SendMessageAsync($"Hi {name}! I'm BaliBot!");
+                }
+            }
+
             if (!message.HasCharPrefix(Prefix, ref argPos))
             {
                 return;

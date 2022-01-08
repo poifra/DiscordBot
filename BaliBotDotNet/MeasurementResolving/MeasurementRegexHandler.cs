@@ -24,8 +24,7 @@ namespace BalibotTest.MeasurementResolving
 
                     if (unit == null
                         || match == null
-                        || !double.TryParse(wholeMatch.Substring
-                            (0, wholeMatch.Length - unit.Length),
+                        || !double.TryParse(wholeMatch[..^unit.Length],
                             NumberStyles.Float, CultureInfo.InvariantCulture,
                             out double number))
                     {

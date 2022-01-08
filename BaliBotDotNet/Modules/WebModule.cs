@@ -19,7 +19,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("convertcurrency")]
-        [Summary("Converts from currency A to currency B")]
+        [Summary("Converts from currency A to currency B. Example usage : $convertcurrency 100 eur cad.")]
         public async Task ConvertAsync(float amount, string source, string destination)
         {
             var rate = await WebService.GetConversionRateAsync(source, destination);

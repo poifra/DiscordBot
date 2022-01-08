@@ -40,6 +40,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("reminder", RunMode = RunMode.Async)]
+        [Summary("Sets a reminder in a fixed amount of time. Example usage: $reminder 10 hours \"dentist\". Possible units are minutes, hours or days.")]
         public async Task CreateReminderAsync(int amount, string unit, string text)
         {
             DateTime remindDate = DateTime.Now;
