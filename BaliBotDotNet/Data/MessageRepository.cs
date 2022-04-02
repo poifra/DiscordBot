@@ -33,6 +33,7 @@ namespace BaliBotDotNet.Model
             var parameters = new { guildID, maximum };
             con.Open();
             var result = con.Query(sql, parameters).ToDictionary(row => (string)row.Username, row => (int)row.nb);
+            con.Close();
             return result;
 
         }
@@ -40,7 +41,7 @@ namespace BaliBotDotNet.Model
         {
             IEnumerable<Message> messageList;
             using var con = SqlCon;
-            var sql = "SELECT * FROM Message WHERE GuildID=@GuildID ";
+            var sql = "SELECT * FROM Message M inner join Author A on A.AuthorID=M.AuthorID WHERE M.GuildID=@GuildID AND A.IsQuotable=1";
             if (authorID != 0)
             {
                 sql += "AND AuthorID=@AuthorID ";
@@ -52,6 +53,7 @@ namespace BaliBotDotNet.Model
             };
             con.Open();
             messageList = con.Query<Message>(sql, parameters);
+            con.Close();
             return messageList.AsList();
         }
 
@@ -65,6 +67,7 @@ namespace BaliBotDotNet.Model
                 InsertMessage(message, guild, con);
             }
             transation.Commit();
+            con.Close();
         }
 
         public void InsertMessage(IMessage discordMessage, SocketGuild guild, SqliteConnection con = null)
@@ -97,6 +100,7 @@ namespace BaliBotDotNet.Model
             }
             con.Execute(sqlAuthor, authorParameters);
             con.Execute(sqlMessage, messageParameters);
+            con.Close();
         }
 
         public void DropMessages(ulong serverID)
@@ -106,6 +110,7 @@ namespace BaliBotDotNet.Model
             var sql = "DELETE FROM Message WHERE GuildID=@GuildID";
             var sqlParams = new { GuildID = serverID };
             con.Execute(sql, sqlParams);
+            con.Close();
         }
     }
 }

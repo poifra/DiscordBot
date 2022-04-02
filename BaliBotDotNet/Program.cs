@@ -64,8 +64,8 @@ namespace BaliBotDotNet
                     _messageRepository.InsertMessage(message, guild);
                 }
             }
-
-            var regexResult = MeasurementMessageHandler.TryConvertMessage(message.Content);
+            //filter spoilers
+            var regexResult = message.Content.Contains("||") ? null : MeasurementMessageHandler.TryConvertMessage(message.Content);
 
             if (regexResult != null)
             {
@@ -88,6 +88,7 @@ namespace BaliBotDotNet
                 .AddSingleton<WebService>()
                 .AddSingleton<IMessageRepository, MessageRepository>()
                 .AddSingleton<IReminderRepository, ReminderRepository>()
+                .AddSingleton<IAuthorRepository, AuthorRepository>()
                 .BuildServiceProvider();
         }
     }

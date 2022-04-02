@@ -39,7 +39,8 @@ namespace BaliBotDotNet.Data
                     create table Author(
                     AuthorID integer primary key,
                     Username text not null,
-                    DiscordID integer not null)");
+                    DiscordID integer not null,
+                    IsQuotable bit not null default 1)");
 
             con.Execute(@"
                     create table Message(                    

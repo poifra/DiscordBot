@@ -41,7 +41,7 @@ namespace BaliBotDotNet.Modules
 
         [Command("reminder", RunMode = RunMode.Async)]
         [Summary("Sets a reminder in a fixed amount of time. Example usage: $reminder 10 hours \"dentist\". Possible units are minutes, hours or days.")]
-        public async Task CreateReminderAsync(int amount, string unit, string text)
+        public async Task CreateReminderAsync(int amount, string unit, params string[] text)
         {
             DateTime remindDate = DateTime.Now;
             switch (unit)
@@ -61,12 +61,17 @@ namespace BaliBotDotNet.Modules
                 case "hours":
                     remindDate = remindDate.AddHours(amount);
                     break;
+                case "y":
+                case "year":
+                case "years":
+                    remindDate = remindDate.AddYears(amount);
+                    break;
                 default:
-                    await ReplyAsync("Available time units are days, hours and minutes.");
+                    await ReplyAsync("Available time units are years, days, hours, minutes.");
                     return;
 
             }
-            int id = _reminderRepository.InsertReminder(Context.Message.Author.Id, Context.Channel.Id, remindDate, text);
+            int id = _reminderRepository.InsertReminder(Context.Message.Author.Id, Context.Channel.Id, remindDate, string.Join(" ",text));
             await ReplyAsync($"I will remind you of this in {amount} {unit}. If you want to delete it in the future, use `$deletereminder {id}`.");
 
         }

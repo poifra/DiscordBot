@@ -12,9 +12,11 @@ namespace BaliBotDotNet.Modules
     public class WordModule : ModuleBase<SocketCommandContext>
     {
         private IMessageRepository _messageRepository;
-        public WordModule(IMessageRepository messageRepository)
+        private IAuthorRepository _authorRepository;
+        public WordModule(IMessageRepository messageRepository, IAuthorRepository authorRepository)
         {
             _messageRepository = messageRepository;
+            _authorRepository = authorRepository;
         }
 
         [Command("leaderboard")]
@@ -108,7 +110,7 @@ namespace BaliBotDotNet.Modules
             }
         }
         [Command("choose")]
-        [Summary("Picks one")]
+        [Summary("Picks something in a list. Choices must be separated by a space or by quotes. Usage: $choose <choice1> <choice2>")]
         public async Task Choose(params string[] choices)
         {
             Random rng = new Random();
@@ -137,6 +139,21 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync($"{answer}");
         }
 
+        [Command("quote")]
+        public async Task Quote()
+        {
+            var messageList = _messageRepository.GetAllMessages(Context.Guild.Id);
+            var rng = new Random();
+            var index = rng.Next(messageList.Count);
+            var message = messageList[index];
+            while (message.Content.Contains('@') || message.Content.Equals(""))
+            {
+               index =  rng.Next(messageList.Count);
+               message = messageList[index];
+            }
+            var author = _authorRepository.GetAuthor(message.AuthorID);
+            await ReplyAsync($"{message.Content} -{author.Username}");
+        }
         [Command("count")]
         [Summary("Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)

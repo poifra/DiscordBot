@@ -20,7 +20,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("userinfo")]
-        [Summary("Get info on a user, or the user who invoked the command if one is not specified")]
+        [Summary("Get info on a user, or the user who invoked the command if one is not specified.")]
         public async Task UserInfoAsync(IUser usr = null)
         {
             SocketGuildUser user = Context.Guild.Users.First(x => x.Id == (usr ?? Context.User).Id);
@@ -35,13 +35,13 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("commands")]
-        [Summary("Display available commands")]
+        [Summary("Display available commands.")]
         public async Task CommandListAsync()
         {
             var builder = new EmbedBuilder()
             {
                 Color = new Color(114, 137, 218),
-                Description = "These are the commands you can use"
+                Description = "These are the commands you can use. For help on a specific command, use $help <command>"
             };
 
             foreach (var module in _service.Modules)
@@ -70,8 +70,15 @@ namespace BaliBotDotNet.Modules
 
         [Command("help")]
         [Summary("Display help on a specific command")]
-        public async Task HelpAsync(string command)
+        public async Task HelpAsync(string command = "")
         {
+
+            if(command.Length == 0)
+            {
+                await CommandListAsync();
+                return;
+            }
+
             var result = _service.Search(Context, command);
 
             if (!result.IsSuccess)

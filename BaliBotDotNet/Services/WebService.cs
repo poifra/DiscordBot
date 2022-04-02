@@ -47,6 +47,12 @@ namespace BaliBotDotNet.Services
             }
         }
 
+        internal async Task<string> Get8BallAnswer()
+        {
+            var response = await _http.GetAsync("https://customapi.aidenwallis.co.uk/api/v1/misc/8ball");
+            return await response.Content.ReadAsStringAsync();
+        }
+
         internal async Task<Stream> GetDogPictureAsync()
         {
             var jsonResponse = await _http.GetAsync("https://dog.ceo/api/breeds/image/random");

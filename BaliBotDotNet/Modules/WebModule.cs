@@ -2,6 +2,7 @@
 using BaliBotDotNet.Services;
 using Discord.Commands;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -19,7 +20,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("convertcurrency")]
-        [Summary("Converts from currency A to currency B. Example usage : $convertcurrency 100 eur cad.")]
+        [Summary("Converts from currency A to currency B. Example usage : `$convertcurrency 100 eur cad.`")]
         public async Task ConvertAsync(float amount, string source, string destination)
         {
             var rate = await WebService.GetConversionRateAsync(source, destination);
@@ -33,8 +34,39 @@ namespace BaliBotDotNet.Modules
             }
         }
 
+        [Command("8ball")]
+        public async Task EightBall(params string[] question)
+        {
+            var random = new Random();
+            List<string> answers = new List<string>{
+                "It is certain",
+                "It is decidedly so",
+                "Without a doubt",
+                "Yes definitely",
+                "You may rely on it",
+
+                "As I see it, yes",
+                "Most likely",
+                "Outlook good",
+                "Yes",
+                "Signs point to yes",
+
+                "Reply hazy, try again",
+                "Ask again later",
+                "Better not tell you now",
+                "Cannot predict now",
+                "Concentrate and ask again",
+
+                "Don't count on it",
+                "My reply is no",
+                "My sources say no",
+                "Outlook not so good",
+                "Very doubtful"};
+            await ReplyAsync(answers[random.Next(answers.Count)]);
+        }
+
         [Command("cat")]
-        [Summary("Gets a cat picture")]
+        [Summary("Gets a cat picture. You can use `$cat gif` to get a gif or `$cat cute` to get a cute cat. Any other words are ignored.")]
         public async Task CatAsync(string word = "")
         {
             var stream = await WebService.GetCatPictureAsync(word);
@@ -56,7 +88,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("dog")]
-        [Summary("Woof")]
+        [Summary("Gets a dog picture.")]
         public async Task DogAsync()
         {
             var stream = await WebService.GetDogPictureAsync();
@@ -72,7 +104,7 @@ namespace BaliBotDotNet.Modules
 
 
         [Command("duck")]
-        [Summary("Quack")]
+        [Summary("Gets a duck picture.")]
         public async Task DuckAsync()
         {
             var stream = await WebService.GetDuckPictureAsync();
@@ -88,7 +120,7 @@ namespace BaliBotDotNet.Modules
 
 
         [Command("fox")]
-        [Summary("Floof")]
+        [Summary("Gets a fox picture.")]
         public async Task FoxAsync()
         {
             var stream = await WebService.GetFoxPictureAsync();
@@ -110,7 +142,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [Command("xkcd")]
-        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" is specified as ID.")]
+        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" or \"latest\" is specified as ID.")]
         public async Task XKCDAsync(string xkcdID = null)
         {
             XKCDContainer container;
@@ -119,7 +151,7 @@ namespace BaliBotDotNet.Modules
             {
                 container = await WebService.GetXKCDAsync(null, true);
             }
-            else if (xkcdID == "last")
+            else if (xkcdID == "last" || xkcdID == "latest")
             {
                 container = await WebService.GetXKCDAsync(null);
             }

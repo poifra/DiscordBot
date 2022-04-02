@@ -94,7 +94,8 @@ namespace BaliBotDotNet.Services
             if (!_timerContextByServerID[serverID].CanUseCommand && !isDebug) // always execute commands if isDebug is set to true
             {
                 var dm = await context.User.GetOrCreateDMChannelAsync();
-                await dm.SendMessageAsync($"The bot is on cooldown! Please wait {delay_in_seconds - (DateTime.Now -_timerContextByServerID[serverID].StartTime).TotalSeconds} seconds before using a command.");
+                double timeRemaining = (delay_in_seconds - (DateTime.Now - _timerContextByServerID[serverID].StartTime).TotalSeconds);
+                await dm.SendMessageAsync($"The bot is on cooldown! Please wait {string.Format("{0:0.00}", timeRemaining)} seconds before using a command.");
                 return;
             }
             
