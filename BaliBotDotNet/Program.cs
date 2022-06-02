@@ -52,7 +52,7 @@ namespace BaliBotDotNet
                 .AddSingleton(_socketConfig)
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-                .AddSingleton<CommandService>()
+               // .AddSingleton<CommandService>()
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
@@ -76,7 +76,7 @@ namespace BaliBotDotNet
 
             client.Log += LogAsync;
             client.MessageReceived += MessageHandler;
-            _services.GetRequiredService<CommandService>().Log += LogAsync;
+            //_services.GetRequiredService<CommandService>().Log += LogAsync;
 
             await client.LoginAsync(TokenType.Bot, _configuration["token"]);
             await client.StartAsync();

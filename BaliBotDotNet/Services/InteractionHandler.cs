@@ -73,23 +73,23 @@ namespace BaliBotDotNet.Services
         {
 
             // This value holds the offset where the prefix ends
-            var text = message.Content.ToLower();
-            if (text.Contains("i'm") || text.Contains("i am"))
-            {
-                var rng = new Random();
-                if (rng.Next(1000) == 420)
-                {
-                    var dadJokeIndex = text.IndexOf("i'm");
-                    if (dadJokeIndex == -1)
-                    {
-                        dadJokeIndex = text.IndexOf("i am");
-                    }
-                    var name = text[(dadJokeIndex + 4)..];
-                    await  message.Channel.SendMessageAsync($"Hi {name}! I'm BaliBot!");
-                }
-            }
+            //var text = message.Content.ToLower();
+            //if (text.Contains("i'm") || text.Contains("i am"))
+            //{
+            //    var rng = new Random();
+            //    if (rng.Next(1000) == 420)
+            //    {
+            //        var dadJokeIndex = text.IndexOf("i'm");
+            //        if (dadJokeIndex == -1)
+            //        {
+            //            dadJokeIndex = text.IndexOf("i am");
+            //        }
+            //        var name = text[(dadJokeIndex + 4)..];
+            //        await  message.Channel.SendMessageAsync($"Hi {name}! I'm BaliBot!");
+            //    }
+            //}
 
-            Discord.Interactions.IResult result;
+            //Discord.Interactions.IResult result;
             //var context = Context.;
             //if (context.Channel.GetChannelType() == ChannelType.DM) //no need for a cooldown in DMs
             //{
