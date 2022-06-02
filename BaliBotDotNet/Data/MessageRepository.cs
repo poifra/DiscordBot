@@ -83,7 +83,7 @@ namespace BaliBotDotNet.Model
                 MessageID = discordMessage.Id,
                 AuthorID = discordMessage.Author.Id,
                 GuildID = guild.Id,
-                Content = discordMessage.Content
+                discordMessage.Content
             };
 
             string[] userInfo = discordMessage.Author.ToString().Split('#');

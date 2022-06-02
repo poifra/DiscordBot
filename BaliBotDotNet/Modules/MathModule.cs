@@ -1,19 +1,21 @@
-﻿using Discord.Commands;
+﻿using BaliBotDotNet.Services;
+using Discord.Interactions;
 using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Modules
 {
-    public class MathModule : ModuleBase<SocketCommandContext>
+    public class MathModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly CommandService _service;
+        public InteractionService Commands { get; set; }
 
-        public MathModule(CommandService service)
+        private InteractionHandler _handler;
+
+        public MathModule(InteractionHandler handler)
         {
-            _service = service;
+            _handler = handler;
         }
 
-        [Command("gcd")]
-        [Summary("Returns the GCD of two numbers.")]
+        [SlashCommand("gcd", "Returns the GCD of two numbers.")]
         public async Task GCD(int a, int b)
         {
             if (b == 0)

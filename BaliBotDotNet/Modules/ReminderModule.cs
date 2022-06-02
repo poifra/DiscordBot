@@ -1,27 +1,30 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
+using BaliBotDotNet.Services;
 using Discord;
-using Discord.Commands;
-using Discord.WebSocket;
+using Discord.Interactions;
 using System;
 using System.Threading.Tasks;
 using System.Timers;
+using RunMode = Discord.Interactions.RunMode;
 
 namespace BaliBotDotNet.Modules
 {
-    public class ReminderModule : ModuleBase<SocketCommandContext>
+    public class ReminderModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IReminderRepository _reminderRepository;
-        private readonly DiscordSocketClient _client;
-        public ReminderModule(IReminderRepository reminderRepository, DiscordSocketClient client)
+        public InteractionService Commands { get; set; }
+
+        private InteractionHandler _handler;
+        public ReminderModule(IReminderRepository reminderRepository, InteractionHandler handler)
         {
             _reminderRepository = reminderRepository;
-            _client = client;
-            Timer t = new Timer(1000 * 60);
+            _handler = handler;
+            Timer t = new(1000 * 60);
             t.Elapsed += CheckForReminders;
             t.Start();
         }
 
-        [Command("deletereminder", RunMode = RunMode.Async)]
+        [SlashCommand("deletereminder","Deletes a specific reminder", runMode: RunMode.Async)]
         public async Task DeleteReminderAsync(int reminderID)
         {
             var reminder = _reminderRepository.GetReminder(reminderID);
@@ -30,7 +33,7 @@ namespace BaliBotDotNet.Modules
                 await ReplyAsync("There is no reminder with that ID!");
                 return;
             }
-            if(Context.Message.Author.Id != reminder.AuthorID)
+            if(Context.User.Id != reminder.AuthorID)
             {
                 await ReplyAsync("You cannot delete someone else's reminder!");
                 return;
@@ -39,8 +42,7 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync($"Deleted reminder \"{reminder.ReminderText}\"");
         }
 
-        [Command("reminder", RunMode = RunMode.Async)]
-        [Summary("Sets a reminder in a fixed amount of time. Example usage: $reminder 10 hours \"dentist\". Possible units are minutes, hours or days.")]
+        [SlashCommand("reminder", "Sets a reminder in a fixed amount of time. Example usage: $reminder 10 hours \"dentist\". Possible units are minutes, hours or days.", runMode : RunMode.Async)]
         public async Task CreateReminderAsync(int amount, string unit, params string[] text)
         {
             DateTime remindDate = DateTime.Now;
@@ -71,7 +73,7 @@ namespace BaliBotDotNet.Modules
                     return;
 
             }
-            int id = _reminderRepository.InsertReminder(Context.Message.Author.Id, Context.Channel.Id, remindDate, string.Join(" ",text));
+            int id = _reminderRepository.InsertReminder(Context.User.Id, Context.Channel.Id, remindDate, string.Join(" ",text));
             await ReplyAsync($"I will remind you of this in {amount} {unit}. If you want to delete it in the future, use `$deletereminder {id}`.");
 
         }
@@ -81,7 +83,7 @@ namespace BaliBotDotNet.Modules
             var reminders = _reminderRepository.CheckForReminders();
             foreach (var reminder in reminders)
             {
-                var channel = _client.GetChannel(reminder.ChannelID) as IMessageChannel;
+                var channel = Context.Guild.GetChannel(reminder.ChannelID) as IMessageChannel;
                 await channel.SendMessageAsync($"{MentionUtils.MentionUser(reminder.AuthorID)} you wanted to be reminded of : \"{reminder.ReminderText}\"");
                 _reminderRepository.SetReminderDone(reminder.ReminderID);
             }

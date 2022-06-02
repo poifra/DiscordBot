@@ -6,42 +6,84 @@ using BaliBotDotNet.Utilities.UOM;
 using BalibotTest.MeasurementResolving;
 using Discord;
 using Discord.Commands;
+using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace BaliBotDotNet
 {
-    class Program
+    public class Program
     {
-        UOMConverter Converter = new UOMConverter();
+        readonly UOMConverter Converter = new();
         IMessageRepository _messageRepository;
-        static void Main(string[] args)
-        {
-            MeasurementConversionHandler.GenerateAvailableMeasurementsList();
-            new Program().MainAsync().GetAwaiter().GetResult();
-        }
+        private readonly IConfiguration _configuration;
+        private readonly IServiceProvider _services;
 
-        public async Task MainAsync()
+        private readonly DiscordSocketConfig _socketConfig = new()
+        {
+            GatewayIntents = GatewayIntents.GuildMessages
+                | GatewayIntents.GuildMessageReactions
+                | GatewayIntents.GuildEmojis
+                | GatewayIntents.GuildMembers
+                | GatewayIntents.GuildVoiceStates
+                | GatewayIntents.DirectMessageReactions
+                | GatewayIntents.DirectMessageTyping
+                | GatewayIntents.DirectMessages
+                | GatewayIntents.GuildEmojis
+                | GatewayIntents.Guilds,
+            AlwaysDownloadUsers = true
+        };
+
+        public Program()
+        {
+            _configuration = new ConfigurationBuilder()
+                .AddEnvironmentVariables(prefix: "$")
+                .AddJsonFile("config.json", optional: true)
+                .Build();
+            _services = new ServiceCollection()
+                .AddSingleton(_configuration)
+                .AddSingleton(_socketConfig)
+                .AddSingleton<DiscordSocketClient>()
+                .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
+                .AddSingleton<CommandService>()
+                .AddSingleton<InteractionHandler>()
+                .AddSingleton<HttpClient>()
+                .AddSingleton<WebService>()
+                .AddSingleton<IMessageRepository, MessageRepository>()
+                .AddSingleton<IReminderRepository, ReminderRepository>()
+                .AddSingleton<IAuthorRepository, AuthorRepository>()
+                .BuildServiceProvider();
+            MeasurementConversionHandler.GenerateAvailableMeasurementsList();
+        }
+        static void Main(string[] args) 
+            => new Program()
+            .RunAsync()
+            .GetAwaiter()
+            .GetResult();
+
+        private async Task RunAsync()
         {
             InitializeDB();
-            using var services = ConfigureServices();
-            var client = services.GetRequiredService<DiscordSocketClient>();
+
+            var client = _services.GetRequiredService<DiscordSocketClient>();
+
             client.Log += LogAsync;
             client.MessageReceived += MessageHandler;
-            services.GetRequiredService<CommandService>().Log += LogAsync;
+            _services.GetRequiredService<CommandService>().Log += LogAsync;
 
-            using var document = JsonDocument.Parse(File.ReadAllText(Environment.CurrentDirectory+"\\config.json"));
-            string token = document.RootElement.GetProperty("token").GetString();
-            await client.LoginAsync(TokenType.Bot, token);
+            await client.LoginAsync(TokenType.Bot, _configuration["token"]);
             await client.StartAsync();
 
             //Initialize the logic required to register commands.
-            await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+            await _services.GetRequiredService<InteractionHandler>()
+                .InitializeAsync();
             await Task.Delay(-1);
         }
 
@@ -78,18 +120,13 @@ namespace BaliBotDotNet
             return Task.CompletedTask;
         }
 
-        private ServiceProvider ConfigureServices()
+        public static bool IsDebug()
         {
-            return new ServiceCollection()
-                .AddSingleton<DiscordSocketClient>()
-                .AddSingleton<CommandService>()
-                .AddSingleton<CommandHandlingService>()
-                .AddSingleton<HttpClient>()
-                .AddSingleton<WebService>()
-                .AddSingleton<IMessageRepository, MessageRepository>()
-                .AddSingleton<IReminderRepository, ReminderRepository>()
-                .AddSingleton<IAuthorRepository, AuthorRepository>()
-                .BuildServiceProvider();
+            #if DEBUG
+                return true;
+            #else
+                return false;
+            #endif
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -22,7 +23,7 @@ namespace BaliBotDotNet.Services
             };
         }
 
-        internal async Task<Stream> GetCatPictureAsync(string word = "")
+        internal async Task<(Stream,HttpStatusCode)> GetCatPictureAsync(string word = "")
         {
             try
             {
@@ -39,11 +40,15 @@ namespace BaliBotDotNet.Services
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat");
                 }
-                return await resp.Content.ReadAsStreamAsync();
+                if (!resp.IsSuccessStatusCode)
+                {
+                    return (null,resp.StatusCode);
+                }
+                return (await resp.Content.ReadAsStreamAsync(),resp.StatusCode);
             }
             catch (Exception) //who needs to be specific Kappa
             {
-                return null;
+                return (null,HttpStatusCode.RequestTimeout);
             }
         }
 
@@ -67,6 +72,16 @@ namespace BaliBotDotNet.Services
             using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
             var image = await (await _http.GetAsync(document.RootElement.GetProperty("url").GetString())).Content.ReadAsStreamAsync();
             return image;
+        }
+
+        internal async Task<LichessContainer> GetLichessPuzzle()
+        {
+            var jsonResponse = await _http.GetAsync("https://lichess.org/api/puzzle/daily");
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            var puzzleID = document.RootElement.GetProperty("puzzle").GetProperty("id");
+            List<string> solution = document.RootElement.GetProperty("puzzle").GetProperty("solution").Deserialize<List<string>>();
+            var image = await _http.GetAsync($"https://lichess1.org/training/export/gif/thumbnail/{puzzleID}.gif");
+            return new LichessContainer { Image = await image.Content.ReadAsStreamAsync(), Solution = solution };
         }
 
         internal async Task<Stream> GetFoxPictureAsync()
@@ -152,5 +167,10 @@ namespace BaliBotDotNet.Services
         public Stream Image { get; set; }
         public string Title { get; set; }
         public string AltText { get; set; }
+    }
+    public class LichessContainer
+    { 
+        public Stream Image { get; set; }
+        public List<string> Solution { get; set; }
     }
 }

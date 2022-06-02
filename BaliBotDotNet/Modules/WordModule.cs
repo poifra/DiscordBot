@@ -1,26 +1,26 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RunMode = Discord.Interactions.RunMode;
 
 namespace BaliBotDotNet.Modules
 {
-    public class WordModule : ModuleBase<SocketCommandContext>
+    public class WordModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private IMessageRepository _messageRepository;
-        private IAuthorRepository _authorRepository;
+        private readonly IMessageRepository _messageRepository;
+        private readonly IAuthorRepository _authorRepository;
         public WordModule(IMessageRepository messageRepository, IAuthorRepository authorRepository)
         {
             _messageRepository = messageRepository;
             _authorRepository = authorRepository;
         }
 
-        [Command("leaderboard")]
-        [Summary("Gets the leaderboard of most active users")]
+        [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
         {
             ulong guildID = Context.Guild.Id;
@@ -32,8 +32,7 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
         }
 
-        [Command("messagecount")]
-        [Summary("Gets the message count of the user who calls the command")]
+        [SlashCommand("messagecount", "Gets the message count of the user who calls the command")]
         public async Task MessageCountAsync()
         {
             ulong authorID = Context.User.Id;
@@ -41,12 +40,12 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync($"You sent {leaderboard.Count} messages.");
         }
 
-        [Command("reload", RunMode = RunMode.Async)]
+        [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
         public async Task ReloadAsync()
         {
-            if (!Context.Message.Author.Username.Equals("Bali"))
+            if (!Context.User.Username.Equals("Bali"))
             {
-                await ReplyAsync($"{MentionUtils.MentionUser(Context.Message.Author.Id)} you can't use that!");
+                await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
@@ -75,8 +74,7 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
-        [Command("wordlength", RunMode = RunMode.Async)]
-        [Summary("Finds the most used word with the specified length")]
+        [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]
         public async Task WordLengthAsync(int wordLength = 1)
         {
             if (wordLength <= 0)
@@ -85,9 +83,9 @@ namespace BaliBotDotNet.Modules
                 return;
             }
 
-            if (Context.Message.Author.Username.Equals("Luneth"))
+            if (Context.User.Username.Equals("Luneth"))
             {
-                await ReplyAsync($"{MentionUtils.MentionUser(Context.Message.Author.Id)} you can't use that!");
+                await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
@@ -109,13 +107,11 @@ namespace BaliBotDotNet.Modules
                 }
             }
         }
-        [Command("choose")]
-        [Summary("Picks something in a list. Choices must be separated by a space or by quotes. Usage: $choose <choice1> <choice2>")]
+        [SlashCommand("choose", "Picks something in a list. Choices must be separated by a space or by quotes. Usage: $choose <choice1> <choice2>")]
         public async Task Choose(params string[] choices)
         {
-            Random rng = new Random();
-            Random cringeRNG = new Random();
-            if (cringeRNG.Next(0, 1000) == 420)
+            Random rng = new();
+            if (rng.Next(0, 1000) == 420)
             {
                 await ReplyAsync("lol cringe");
                 return;
@@ -130,8 +126,7 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync(choices[pick]);
         }
 
-        [Command("coinflip")]
-        [Summary("Heads or tails")]
+        [SlashCommand("coinflip", "Heads or tails")]
         public async Task CoinFlip()
         {
             Random rng = new();
@@ -139,7 +134,7 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync($"{answer}");
         }
 
-        [Command("quote")]
+        [SlashCommand("quote", "Quotes someone at random, without context")]
         public async Task Quote()
         {
             var messageList = _messageRepository.GetAllMessages(Context.Guild.Id);
@@ -148,14 +143,13 @@ namespace BaliBotDotNet.Modules
             var message = messageList[index];
             while (message.Content.Contains('@') || message.Content.Equals(""))
             {
-               index =  rng.Next(messageList.Count);
-               message = messageList[index];
+                index = rng.Next(messageList.Count);
+                message = messageList[index];
             }
             var author = _authorRepository.GetAuthor(message.AuthorID);
             await ReplyAsync($"{message.Content} -{author.Username}");
         }
-        [Command("count")]
-        [Summary("Counts the number of occurences of a specified word")]
+        [SlashCommand("count", "Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)
         {
             if (word.IsNullOrEmpty())
@@ -176,7 +170,7 @@ namespace BaliBotDotNet.Modules
         private Dictionary<string, int> LoadMessages(int wordLength = 0)
         {
             var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
-            Dictionary<string, int> dict = new Dictionary<string, int>();
+            Dictionary<string, int> dict = new();
             foreach (var m in messages)
             {
                 IEnumerable<string> words = m.Content.Split(' ').ToList();
