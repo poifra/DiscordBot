@@ -42,41 +42,41 @@ namespace BaliBotDotNet.Modules
             await ReplyAsync($"Deleted reminder \"{reminder.ReminderText}\"");
         }
 
-        [SlashCommand("reminder", "Sets a reminder in a fixed amount of time. Example usage: $reminder 10 hours \"dentist\". Possible units are minutes, hours or days.", runMode : RunMode.Async)]
-        public async Task CreateReminderAsync(int amount, string unit, params string[] text)
-        {
-            DateTime remindDate = DateTime.Now;
-            switch (unit)
-            {
-                case "m":
-                case "minute":
-                case "minutes":
-                    remindDate = remindDate.AddMinutes(amount);
-                    break;
-                case "d":
-                case "days":
-                case "day":
-                    remindDate = remindDate.AddDays(amount);
-                    break;
-                case "h":
-                case "hour":
-                case "hours":
-                    remindDate = remindDate.AddHours(amount);
-                    break;
-                case "y":
-                case "year":
-                case "years":
-                    remindDate = remindDate.AddYears(amount);
-                    break;
-                default:
-                    await ReplyAsync("Available time units are years, days, hours, minutes.");
-                    return;
+        //[SlashCommand("reminder", "Sets a reminder in a fixed amount of time. Example usage: $reminder 10 hours \"dentist\". Possible units are minutes, hours or days.", runMode : RunMode.Async)]
+        //public async Task CreateReminderAsync(int amount, string unit, params string[] text)
+        //{
+        //    DateTime remindDate = DateTime.Now;
+        //    switch (unit)
+        //    {
+        //        case "m":
+        //        case "minute":
+        //        case "minutes":
+        //            remindDate = remindDate.AddMinutes(amount);
+        //            break;
+        //        case "d":
+        //        case "days":
+        //        case "day":
+        //            remindDate = remindDate.AddDays(amount);
+        //            break;
+        //        case "h":
+        //        case "hour":
+        //        case "hours":
+        //            remindDate = remindDate.AddHours(amount);
+        //            break;
+        //        case "y":
+        //        case "year":
+        //        case "years":
+        //            remindDate = remindDate.AddYears(amount);
+        //            break;
+        //        default:
+        //            await ReplyAsync("Available time units are years, days, hours, minutes.");
+        //            return;
 
-            }
-            int id = _reminderRepository.InsertReminder(Context.User.Id, Context.Channel.Id, remindDate, string.Join(" ",text));
-            await ReplyAsync($"I will remind you of this in {amount} {unit}. If you want to delete it in the future, use `$deletereminder {id}`.");
+        //    }
+        //    int id = _reminderRepository.InsertReminder(Context.User.Id, Context.Channel.Id, remindDate, string.Join(" ",text));
+        //    await ReplyAsync($"I will remind you of this in {amount} {unit}. If you want to delete it in the future, use `$deletereminder {id}`.");
 
-        }
+        //}
 
         private async void CheckForReminders(object sender, ElapsedEventArgs e)
         {

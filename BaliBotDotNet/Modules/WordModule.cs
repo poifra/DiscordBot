@@ -29,7 +29,7 @@ namespace BaliBotDotNet.Modules
                 await ReplyAsync("Maximum must be between 1 and 20");
             }
             var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
-            await ReplyAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
+            await RespondAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
         }
 
         [SlashCommand("messagecount", "Gets the message count of the user who calls the command")]
@@ -37,7 +37,7 @@ namespace BaliBotDotNet.Modules
         {
             ulong authorID = Context.User.Id;
             var leaderboard = _messageRepository.GetAllMessages(Context.Guild.Id, authorID);
-            await ReplyAsync($"You sent {leaderboard.Count} messages.");
+            await RespondAsync($"You sent {leaderboard.Count} messages.");
         }
 
         [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
@@ -45,11 +45,11 @@ namespace BaliBotDotNet.Modules
         {
             if (!Context.User.Username.Equals("Bali"))
             {
-                await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
+                await RespondAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
-            await ReplyAsync("Loading....");
+            await RespondAsync("Loading....");
             const int messageCount = 10_000_000;
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
@@ -67,11 +67,11 @@ namespace BaliBotDotNet.Modules
                 }
                 catch (Discord.Net.HttpException)
                 {
-                    await ReplyAsync("I can't read " + channel.Name);
+                    await RespondAsync("I can't read " + channel.Name);
                 }
                 numberOfProcessedMessages += messages?.Count() ?? 0;
             }
-            await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
+            await RespondAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
         [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]
@@ -79,13 +79,13 @@ namespace BaliBotDotNet.Modules
         {
             if (wordLength <= 0)
             {
-                await ReplyAsync("You must specify a minimum length greater than 0.");
+                await RespondAsync("You must specify a minimum length greater than 0.");
                 return;
             }
 
             if (Context.User.Username.Equals("Luneth"))
             {
-                await ReplyAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
+                await RespondAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
@@ -93,37 +93,38 @@ namespace BaliBotDotNet.Modules
             var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
             if (string.IsNullOrEmpty(kv.Key))
             {
-                await ReplyAsync($"There are no words that are {wordLength} letters long.");
+                await RespondAsync($"There are no words that are {wordLength} letters long.");
             }
             else
             {
                 if (MentionUtils.TryParseUser(kv.Key, out ulong mention))
                 {
-                    await ReplyAsync("This would ping someone :(");
+                    await RespondAsync("This would ping someone :(");
                 }
                 else
                 {
-                    await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
+                    await RespondAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
                 }
             }
         }
-        [SlashCommand("choose", "Picks something in a list. Choices must be separated by a space or by quotes. Usage: $choose <choice1> <choice2>")]
-        public async Task Choose(params string[] choices)
+        [SlashCommand("choose", "Picks something in a list.")]
+        public async Task Choose(string choicesString)
         {
+            string[] choices = choicesString.Split(' ');
             Random rng = new();
             if (rng.Next(0, 1000) == 420)
             {
-                await ReplyAsync("lol cringe");
+                await RespondAsync("lol cringe");
                 return;
             }
             int n = choices.Length;
             if (n == 0)
             {
-                await ReplyAsync("You must specify at least one thing.");
+                await RespondAsync("You must specify at least one thing.");
                 return;
             }
             int pick = rng.Next(0, n);
-            await ReplyAsync(choices[pick]);
+            await RespondAsync(choices[pick]);
         }
 
         [SlashCommand("coinflip", "Heads or tails")]
@@ -131,7 +132,7 @@ namespace BaliBotDotNet.Modules
         {
             Random rng = new();
             string answer = rng.Next(0, 2) % 2 == 0 ? "heads" : "tails";
-            await ReplyAsync($"{answer}");
+            await RespondAsync($"{answer}");
         }
 
         [SlashCommand("quote", "Quotes someone at random, without context")]
@@ -147,23 +148,23 @@ namespace BaliBotDotNet.Modules
                 message = messageList[index];
             }
             var author = _authorRepository.GetAuthor(message.AuthorID);
-            await ReplyAsync($"{message.Content} -{author.Username}");
+            await RespondAsync($"{message.Content} -{author.Username}");
         }
         [SlashCommand("count", "Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)
         {
             if (word.IsNullOrEmpty())
             {
-                await ReplyAsync("You must specify a word to search.");
+                await RespondAsync("You must specify a word to search.");
             }
             var dict = LoadMessages();
             if (dict.TryGetValue(word, out int count))
             {
-                await ReplyAsync($"The word \"{word}\" has been used {count} time(s).");
+                await RespondAsync($"The word \"{word}\" has been used {count} time(s).");
             }
             else
             {
-                await ReplyAsync("That word was never used in this server.");
+                await RespondAsync("That word was never used in this server.");
             }
         }
 

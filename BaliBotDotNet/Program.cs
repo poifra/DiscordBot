@@ -28,31 +28,23 @@ namespace BaliBotDotNet
 
         private readonly DiscordSocketConfig _socketConfig = new()
         {
-            GatewayIntents = GatewayIntents.GuildMessages
-                | GatewayIntents.GuildMessageReactions
-                | GatewayIntents.GuildEmojis
-                | GatewayIntents.GuildMembers
-                | GatewayIntents.GuildVoiceStates
-                | GatewayIntents.DirectMessageReactions
-                | GatewayIntents.DirectMessageTyping
-                | GatewayIntents.DirectMessages
-                | GatewayIntents.GuildEmojis
-                | GatewayIntents.Guilds,
-            AlwaysDownloadUsers = true
+            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers,
+            AlwaysDownloadUsers = true,
+            UseInteractionSnowflakeDate = false
         };
 
         public Program()
         {
             _configuration = new ConfigurationBuilder()
-                .AddEnvironmentVariables(prefix: "$")
-                .AddJsonFile("config.json", optional: true)
+                .SetBasePath(AppContext.BaseDirectory)
+                .AddJsonFile("config.json")
                 .Build();
             _services = new ServiceCollection()
                 .AddSingleton(_configuration)
                 .AddSingleton(_socketConfig)
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>()))
-               // .AddSingleton<CommandService>()
+                .AddSingleton<CommandService>()
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
@@ -61,6 +53,7 @@ namespace BaliBotDotNet
                 .AddSingleton<IAuthorRepository, AuthorRepository>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
+            _messageRepository = new MessageRepository();
         }
         static void Main(string[] args) 
             => new Program()
@@ -70,13 +63,11 @@ namespace BaliBotDotNet
 
         private async Task RunAsync()
         {
-            InitializeDB();
-
             var client = _services.GetRequiredService<DiscordSocketClient>();
 
             client.Log += LogAsync;
             client.MessageReceived += MessageHandler;
-            //_services.GetRequiredService<CommandService>().Log += LogAsync;
+            _services.GetRequiredService<CommandService>().Log += LogAsync;
 
             await client.LoginAsync(TokenType.Bot, _configuration["token"]);
             await client.StartAsync();
@@ -84,12 +75,7 @@ namespace BaliBotDotNet
             //Initialize the logic required to register commands.
             await _services.GetRequiredService<InteractionHandler>()
                 .InitializeAsync();
-            await Task.Delay(-1);
-        }
-
-        private void InitializeDB()
-        {
-            _messageRepository = new MessageRepository();
+            await Task.Delay(Timeout.Infinite);
         }
 
         private async Task MessageHandler(SocketMessage message)

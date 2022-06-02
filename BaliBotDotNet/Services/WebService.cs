@@ -16,7 +16,7 @@ namespace BaliBotDotNet.Services
         public WebService(HttpClient http)
         {
             _http = http;
-            _http.Timeout = TimeSpan.FromSeconds(3);
+            _http.Timeout = TimeSpan.FromSeconds(5);
             _animals = new Dictionary<string, Func<Task<Stream>>>
             {
                 { "duck", GetDuckPictureAsync }

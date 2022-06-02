@@ -1,4 +1,5 @@
-﻿namespace BaliBotDotNet.Utilities.ExtensionMethods
+﻿using System;
+namespace BaliBotDotNet.Utilities.ExtensionMethods
 {
     public static class StringExtensions
     {
