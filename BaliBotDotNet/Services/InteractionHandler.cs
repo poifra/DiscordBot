@@ -39,11 +39,12 @@ namespace BaliBotDotNet.Services
 
             // Process the InteractionCreated payloads to execute Interactions commands
             _client.InteractionCreated += HandleInteraction;
+            _client.MessageReceived += MessageReceivedAsync;
         }
 
         private async Task HandleInteraction(SocketInteraction interaction)
         {
-    
+   
             try
             {
                 var context = new SocketInteractionContext(_client, interaction);
@@ -74,22 +75,22 @@ namespace BaliBotDotNet.Services
         public async Task MessageReceivedAsync(SocketMessage message)
         {
 
-            // This value holds the offset where the prefix ends
-            //var text = message.Content.ToLower();
-            //if (text.Contains("i'm") || text.Contains("i am"))
-            //{
-            //    var rng = new Random();
-            //    if (rng.Next(1000) == 420)
-            //    {
-            //        var dadJokeIndex = text.IndexOf("i'm");
-            //        if (dadJokeIndex == -1)
-            //        {
-            //            dadJokeIndex = text.IndexOf("i am");
-            //        }
-            //        var name = text[(dadJokeIndex + 4)..];
-            //        await  message.Channel.SendMessageAsync($"Hi {name}! I'm BaliBot!");
-            //    }
-            //}
+            //This value holds the offset where the prefix ends
+           var text = message.Content.ToLower();
+            if (text.Contains("i'm") || text.Contains("i am"))
+            {
+                var rng = new Random();
+                if (rng.Next(1000) == 420)
+                {
+                    var dadJokeIndex = text.IndexOf("i'm");
+                    if (dadJokeIndex == -1)
+                    {
+                        dadJokeIndex = text.IndexOf("i am");
+                    }
+                    var name = text[(dadJokeIndex + 4)..];
+                    await message.Channel.SendMessageAsync($"Hi {name}! I'm BaliBot!");
+                }
+            }
 
             //Discord.Interactions.IResult result;
             //var context = Context.;

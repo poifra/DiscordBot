@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using Discord.Interactions;
 using RunMode = Discord.Interactions.RunMode;
+using Discord;
 
 namespace BaliBotDotNet.Modules
 {
@@ -73,19 +74,19 @@ namespace BaliBotDotNet.Modules
         public async Task DailyPuzzle()
         {
             //var puzzle = await WebService.GetLichessPuzzle();
-            //await Context.Channel.SendFileAsync(puzzle.Image, "lichess.gif");
+            //await RespondWithFileAsync(puzzle.Image, "lichess.gif");
             //await Context.Channel.SendMessageAsync($"{Context.User.Username}, you can reply moves to the puzzle by using a \"e2e4\" format. Type `stop` to stop the bot from tracking your answers.");
             //var solution = puzzle.Solution;
-
+            
             //var regex = new Regex("([a-h][1-8]){2}");
             //while (solution.Count > 0)
             //{
-            //    var message = await NextMessageAsync(true,true,TimeSpan.FromMinutes(1));
+            //    var message = await NextMessageAsync(true, true, TimeSpan.FromMinutes(1));
             //    if (message == null || !regex.IsMatch(message.Content))
             //    {
             //        continue;
             //    }
-               
+
             //    if (message.Content.Equals("stop"))
             //    {
             //        break;

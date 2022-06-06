@@ -67,11 +67,11 @@ namespace BaliBotDotNet.Modules
                 }
                 catch (Discord.Net.HttpException)
                 {
-                    await RespondAsync("I can't read " + channel.Name);
+                    await ReplyAsync("I can't read " + channel.Name);
                 }
                 numberOfProcessedMessages += messages?.Count() ?? 0;
             }
-            await RespondAsync($"Done loading {numberOfProcessedMessages} messages!");
+            await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
         [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]
