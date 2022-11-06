@@ -44,7 +44,7 @@ namespace BaliBotDotNet.Model
             var sql = "SELECT * FROM Message M inner join Author A on A.AuthorID=M.AuthorID WHERE M.GuildID=@GuildID AND A.IsQuotable=1";
             if (authorID != 0)
             {
-                sql += "AND AuthorID=@AuthorID ";
+                sql += " AND AuthorID=@AuthorID ";
             }
             var parameters = new
             {
@@ -100,7 +100,7 @@ namespace BaliBotDotNet.Model
             }
             con.Execute(sqlAuthor, authorParameters);
             con.Execute(sqlMessage, messageParameters);
-            con.Close();
+
         }
 
         public void DropMessages(ulong serverID)

@@ -90,7 +90,7 @@ namespace BaliBotDotNet.Services
                 _timerContextByServerID[serverID] = timerInstance;
             }
 
-            bool isDebug = false;
+            bool isDebug = true;
             if (!_timerContextByServerID[serverID].CanUseCommand && !isDebug) // always execute commands if isDebug is set to true
             {
                 var dm = await context.User.GetOrCreateDMChannelAsync();
