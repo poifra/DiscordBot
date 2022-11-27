@@ -23,7 +23,7 @@ namespace BaliBotDotNet.Modules
             _messageRepository = messageRepository;
         }
 
-        [SlashCommand("convertcurrency", "Converts from currency A to currency B.`")]
+        [SlashCommand("convertcurrency", "Converts from currency A to currency B.")]
         public async Task ConvertAsync(float amount, string source, string destination)
         {
             var rate = await WebService.GetConversionRateAsync(source, destination);
@@ -68,49 +68,6 @@ namespace BaliBotDotNet.Modules
                 "Very doubtful"
             };
             await RespondAsync(answers[random.Next(answers.Count)]);
-        }
-
-        [SlashCommand("dailypuzzle", "Gets the daily puzzle on Lichess", runMode: RunMode.Async)]
-        public async Task DailyPuzzle()
-        {
-            //var puzzle = await WebService.GetLichessPuzzle();
-            //await RespondWithFileAsync(puzzle.Image, "lichess.gif");
-            //await Context.Channel.SendMessageAsync($"{Context.User.Username}, you can reply moves to the puzzle by using a \"e2e4\" format. Type `stop` to stop the bot from tracking your answers.");
-            //var solution = puzzle.Solution;
-            
-            //var regex = new Regex("([a-h][1-8]){2}");
-            //while (solution.Count > 0)
-            //{
-            //    var message = await NextMessageAsync(true, true, TimeSpan.FromMinutes(1));
-            //    if (message == null || !regex.IsMatch(message.Content))
-            //    {
-            //        continue;
-            //    }
-
-            //    if (message.Content.Equals("stop"))
-            //    {
-            //        break;
-            //    }
-            //    else if (message.Content.Equals(solution[0]))
-            //    {
-            //        if (solution.Count == 1)
-            //        {
-            //            await Context.Channel.SendMessageAsync("You solved the puzzle!");
-            //            solution.RemoveAt(0);
-            //        }
-            //        else
-            //        {
-            //            await Context.Channel.SendMessageAsync($"That is the correct move! Opponent plays {solution[1]}");
-            //            solution.RemoveAt(0);
-            //            solution.RemoveAt(0);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        await Context.Channel.SendMessageAsync("That is not the correct move!");
-            //    }
-            //}
-
         }
 
         [SlashCommand("cat", "Gets a cat picture.")]

@@ -5,6 +5,7 @@ using Dapper;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,22 +26,28 @@ namespace BaliBotDotNet.Model
                 "group by m.AuthorID " +
                 "order by nb desc " +
                 "limit @maximum";
-            using var con = SqlCon;
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             if (maximum > 20)
             {
                 return new Dictionary<string, int>();
             }
             var parameters = new { guildID, maximum };
-            con.Open();
             var result = con.Query(sql, parameters).ToDictionary(row => (string)row.Username, row => (int)row.nb);
-            con.Close();
             return result;
 
         }
         public List<Message> GetAllMessages(ulong guildID, ulong authorID = 0)
         {
             IEnumerable<Message> messageList;
-            using var con = SqlCon;
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sql = "SELECT * FROM Message M inner join Author A on A.AuthorID=M.AuthorID WHERE M.GuildID=@GuildID AND A.IsQuotable=1";
             if (authorID != 0)
             {
@@ -51,23 +58,24 @@ namespace BaliBotDotNet.Model
                 AuthorID = authorID,
                 GuildID = guildID
             };
-            con.Open();
             messageList = con.Query<Message>(sql, parameters);
-            con.Close();
             return messageList.AsList();
         }
 
         public void InsertBulkMessage(IEnumerable<IMessage> messages, SocketGuild guild)
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var transation = con.BeginTransaction();
             foreach (var message in messages)
             {
                 InsertMessage(message, guild, con);
             }
             transation.Commit();
-            con.Close();
         }
 
         public void InsertMessage(IMessage discordMessage, SocketGuild guild, SqliteConnection con = null)
@@ -76,14 +84,15 @@ namespace BaliBotDotNet.Model
             {
                 con = SqlCon;
             }
-            var sqlMessage = "INSERT OR IGNORE INTO Message (MessageID, AuthorID, GuildID, Content) VALUES (@MessageID, @AuthorID, @GuildID, @Content)";
+            var sqlMessage = "INSERT OR IGNORE INTO Message (MessageID, AuthorID, GuildID, Content, DateSent) VALUES (@MessageID, @AuthorID, @GuildID, @Content, @Date)";
             var sqlAuthor = "INSERT OR IGNORE INTO Author (AuthorID, Username, DiscordID) VALUES (@AuthorID, @Username, @DiscordID)";
             var messageParameters = new
             {
                 MessageID = discordMessage.Id,
                 AuthorID = discordMessage.Author.Id,
                 GuildID = guild.Id,
-                discordMessage.Content
+                discordMessage.Content,
+                Date = discordMessage.Timestamp.DateTime.ToString(),
             };
 
             string[] userInfo = discordMessage.Author.ToString().Split('#');
@@ -100,17 +109,18 @@ namespace BaliBotDotNet.Model
             }
             con.Execute(sqlAuthor, authorParameters);
             con.Execute(sqlMessage, messageParameters);
-            con.Close();
         }
 
         public void DropMessages(ulong serverID)
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sql = "DELETE FROM Message WHERE GuildID=@GuildID";
             var sqlParams = new { GuildID = serverID };
             con.Execute(sql, sqlParams);
-            con.Close();
         }
     }
 }

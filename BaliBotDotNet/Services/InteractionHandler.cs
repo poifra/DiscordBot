@@ -65,8 +65,8 @@ namespace BaliBotDotNet.Services
             // Since Global Commands take around 1 hour to register, we should use a test guild to instantly update and test our commands.
             if (Program.IsDebug())
             {
-                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testGuild"]));
-                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["ragnacord"]));
+                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testGuild"]),true);
+                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["ragnacord"]),true);
             }
             else
                 await _handler.RegisterCommandsGloballyAsync(true);

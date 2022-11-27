@@ -14,8 +14,11 @@ namespace BaliBotDotNet.Data
 
         public List<Reminder> CheckForReminders()
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sql = "SELECT * FROM Reminder where IsReminderDone=0 AND ReminderTime<DATETIME('now','localtime');";
             var reminders = con.Query<Reminder>(sql);
             return reminders.AsList();
@@ -23,8 +26,11 @@ namespace BaliBotDotNet.Data
 
         public void DeleteReminder(int reminderID)
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sqlUpdate = "DELETE FROM Reminder WHERE ReminderID=@ReminderID;";
             var updateParameters = new
             {
@@ -35,8 +41,11 @@ namespace BaliBotDotNet.Data
 
         public Reminder GetReminder(int reminderID)
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sqlUpdate = "SELECT * FROM Reminder WHERE ReminderID=@ReminderID;";
             var updateParameters = new
             {
@@ -48,8 +57,11 @@ namespace BaliBotDotNet.Data
 
         public int InsertReminder(ulong authorID, ulong channelID, DateTime reminderDate, string reminderText)
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sqlInsert = "INSERT INTO Reminder (AuthorID, ChannelID, ReminderText, ReminderTime) VALUES (@AuthorID, @ChannelID, @ReminderText, @ReminderTime);";
             var reminderParameters = new
             {
@@ -64,8 +76,11 @@ namespace BaliBotDotNet.Data
 
         public void SetReminderDone(int reminderID)
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             var sqlUpdate = "UPDATE Reminder SET IsReminderDone = 1 WHERE ReminderID=@ReminderID;";
             var updateParameters = new
             {

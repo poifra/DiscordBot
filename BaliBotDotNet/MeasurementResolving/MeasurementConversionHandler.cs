@@ -54,7 +54,7 @@ namespace BalibotTest.MeasurementResolving
                 ("ft,feet", "m,meter,meters", 0.3054f, 0, true),
                 ("ac,acre,acres", "meters squared",4046.9f,0,true),
                 ("inch,inches", "cm", 2.54f, 0, true),
-                ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
+                ("°f,f,fahrenheit", "°c,c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, true),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
             };

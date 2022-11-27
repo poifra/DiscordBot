@@ -33,8 +33,11 @@ namespace BaliBotDotNet.Data
         }
         private static void CreateDatabase()
         {
-            using var con = SqlCon;
-            con.Open();
+            var con = SqlCon;
+            if (con.State != System.Data.ConnectionState.Open)
+            {
+                con.Open();
+            }
             con.Execute(@"
                     create table Author(
                     AuthorID integer primary key,
@@ -48,6 +51,7 @@ namespace BaliBotDotNet.Data
                     AuthorID integer not null,
                     GuildID integer not null,
                     Content text not null,
+                    DateSent text not null,
                     foreign key(AuthorID) references Author(AuthorID));");
 
             con.Execute(@"

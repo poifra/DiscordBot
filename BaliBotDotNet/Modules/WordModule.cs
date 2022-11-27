@@ -41,7 +41,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
-        public async Task ReloadAsync()
+        public async Task ReloadAsync(bool reloadSingleChannel = false)
         {
             if (!Context.User.Username.Equals("Bali"))
             {
@@ -54,15 +54,26 @@ namespace BaliBotDotNet.Modules
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
 
-            _messageRepository.DropMessages(Context.Guild.Id);
+            if (reloadSingleChannel)
+            {
+                _messageRepository.DropMessages(Context.Channel.Id);
+            }
+            else
+            {
+                _messageRepository.DropMessages(Context.Guild.Id);
+            }
 
             foreach (var channel in channels)
             {
+                if(reloadSingleChannel && channel.Id != Context.Channel.Id)
+                {
+                    continue;
+                }
                 IEnumerable<IMessage> messages = null;
                 try
                 {
                     messages = await channel.GetMessagesAsync(messageCount).FlattenAsync();
-                    messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
+                    messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$') && !x.ToString().StartsWith("p!c"));
                     _messageRepository.InsertBulkMessage(messages, Context.Guild);
                 }
                 catch (Discord.Net.HttpException)
@@ -135,21 +146,25 @@ namespace BaliBotDotNet.Modules
             await RespondAsync($"{answer}");
         }
 
-        [SlashCommand("quote", "Quotes someone at random, without context")]
+        [SlashCommand("quote", "Quotes someone at random, without context",runMode:RunMode.Async)]
         public async Task Quote()
         {
+            await DeferAsync();
             var messageList = _messageRepository.GetAllMessages(Context.Guild.Id);
             var rng = new Random();
             var index = rng.Next(messageList.Count);
             var message = messageList[index];
             while (message.Content.Contains('@') || message.Content.Equals(""))
             {
+                Console.WriteLine($"Tried to send {message.Content}");
                 index = rng.Next(messageList.Count);
                 message = messageList[index];
             }
             var author = _authorRepository.GetAuthor(message.AuthorID);
-            await RespondAsync($"{message.Content} -{author.Username}");
+            await FollowupAsync($"{message.Content} -{author.Username}, {message.DateSent:dd MMMM yyyy}");
+            //await Context.Channel.SendMessageAsync($"{message.Content} -{author.Username}, {message.DateSent:dd MMMM yyyy}");
         }
+
         [SlashCommand("count", "Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)
         {

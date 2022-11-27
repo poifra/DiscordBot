@@ -28,7 +28,7 @@ namespace BaliBotDotNet
 
         private readonly DiscordSocketConfig _socketConfig = new()
         {
-            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers,
+            GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.MessageContent,
             AlwaysDownloadUsers = true,
             UseInteractionSnowflakeDate = false
         };
@@ -92,6 +92,12 @@ namespace BaliBotDotNet
                     _messageRepository.InsertMessage(message, guild);
                 }
             }
+
+            if (message.Content.ToLower().Contains("thanks balibot"))
+            {
+                await message.Channel.SendMessageAsync("You're welcome!");
+            }
+
             //filter spoilers
             var regexResult = message.Content.Contains("||") ? null : MeasurementMessageHandler.TryConvertMessage(message.Content);
 
