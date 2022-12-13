@@ -57,6 +57,7 @@ namespace BalibotTest.MeasurementResolving
                 ("°f,f,fahrenheit", "°c,c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, true),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
+                ("foot candle,fc,ft-c,foot-candle","lumen,lumens",10.76f,0,true)
             };
 
     }
