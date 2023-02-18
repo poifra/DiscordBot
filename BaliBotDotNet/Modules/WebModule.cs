@@ -73,18 +73,19 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("cat", "Gets a cat picture.")]
         public async Task CatAsync(string word = "")
         {
+            await DeferAsync();
             var tuple = await WebService.GetCatPictureAsync(word);
             Stream stream = tuple.Item1;
             HttpStatusCode statusCode = tuple.Item2;
             if (stream == null && statusCode == HttpStatusCode.RequestTimeout)
             {
-                await RespondAsync("Cat API timed out :(");
+                await FollowupAsync("Cat API timed out :(");
                 return;
             }
 
             if (!statusCode.HasFlag(HttpStatusCode.OK))
             {
-                await RespondAsync($"Api returned {((int)statusCode)} {statusCode}");
+                await FollowupAsync($"Api returned {((int)statusCode)} {statusCode}");
                 return;
             }
 
@@ -92,32 +93,34 @@ namespace BaliBotDotNet.Modules
             stream.Seek(0, SeekOrigin.Begin);
             if (word.Equals("gif"))
             {
-                await RespondWithFileAsync(stream, "cat.gif");
+                await FollowupWithFileAsync(stream, "cat.gif");
             }
             else
             {
-                await RespondWithFileAsync(stream, "cat.png");
+                await FollowupWithFileAsync(stream, "cat.png");
             }
         }
 
         [SlashCommand("dog", "Gets a dog picture.")]
         public async Task DogAsync()
         {
+            await DeferAsync();
             var stream = await WebService.GetDogPictureAsync();
             if (stream == null)
             {
-                await RespondAsync("Dog API timed out :(");
+                await FollowupAsync("Dog API timed out :(");
                 return;
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await RespondWithFileAsync(stream, "dog.png");
+            await FollowupWithFileAsync(stream, "dog.png");
         }
 
 
         [SlashCommand("duck", "Gets a duck picture.")]
         public async Task DuckAsync()
         {
+            await DeferAsync();
             var stream = await WebService.GetDuckPictureAsync();
             if (stream == null)
             {
@@ -126,13 +129,14 @@ namespace BaliBotDotNet.Modules
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await RespondWithFileAsync(stream, "duck.png");
+            await FollowupWithFileAsync(stream, "duck.png");
         }
 
 
         [SlashCommand("fox", "Gets a fox picture.")]
         public async Task FoxAsync()
         {
+            await DeferAsync();
             var stream = await WebService.GetFoxPictureAsync();
             if (stream == null)
             {
@@ -141,7 +145,7 @@ namespace BaliBotDotNet.Modules
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await RespondWithFileAsync(stream, "fox.png");
+            await FollowupWithFileAsync(stream, "fox.png");
         }
 
         [SlashCommand("dadjoke", "Gets a dad joke")]

@@ -80,6 +80,10 @@ namespace BaliBotDotNet
 
         private async Task MessageHandler(SocketMessage message)
         {
+            if (message.Author.Username == "subpixelmaster4000")
+            {
+                return;
+            }
             if (message.Source != MessageSource.User) //bot doesnt reply to other bots (including itself)
             {
                 return;

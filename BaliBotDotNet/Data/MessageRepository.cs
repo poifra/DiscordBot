@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace BaliBotDotNet.Model
@@ -92,7 +93,7 @@ namespace BaliBotDotNet.Model
                 AuthorID = discordMessage.Author.Id,
                 GuildID = guild.Id,
                 discordMessage.Content,
-                Date = discordMessage.Timestamp.DateTime.ToString(),
+                Date = discordMessage.Timestamp.DateTime.ToString(CultureInfo.InvariantCulture),
             };
 
             string[] userInfo = discordMessage.Author.ToString().Split('#');

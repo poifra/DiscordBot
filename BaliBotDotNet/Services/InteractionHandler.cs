@@ -44,6 +44,10 @@ namespace BaliBotDotNet.Services
 
         private async Task HandleInteraction(SocketInteraction interaction)
         {
+            if (interaction.User.Username == "subpixelmaster4000")
+            {
+                return;
+            }
    
             try
             {

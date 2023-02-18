@@ -23,13 +23,15 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
         {
+            await DeferAsync();
             ulong guildID = Context.Guild.Id;
             if (maximum > 20 || maximum < 1)
             {
-                await ReplyAsync("Maximum must be between 1 and 20");
+                await FollowupAsync("Maximum must be between 1 and 20");
+                return;
             }
             var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
-            await RespondAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
+            await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
         }
 
         [SlashCommand("messagecount", "Gets the message count of the user who calls the command")]
