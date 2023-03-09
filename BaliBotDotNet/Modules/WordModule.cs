@@ -1,10 +1,13 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
+using BaliBotDotNet.Models;
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Interactions;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using RunMode = Discord.Interactions.RunMode;
 
@@ -183,6 +186,69 @@ namespace BaliBotDotNet.Modules
             {
                 await RespondAsync("That word was never used in this server.");
             }
+        }
+        [SlashCommand("ngram", "Returns a list of n-grams by the user", runMode: RunMode.Async)]
+        public async Task DisplayNGrams(int size = 0)
+        {
+            await DeferAsync();
+            List<string> results = new();
+            var messages = _messageRepository.GetAllMessages(Context.Guild.Id, Context.User.Id);
+
+            if (size != 0)
+            {
+                results.Add(FetchNGram(size, messages));
+            }
+            else
+            {
+                for (int i = 2; i <= 6; i++)
+                {
+                    results.Add($"{i}-grams");
+                    results.Add(FetchNGram(i, messages));
+                    results.Add("\n");
+                }
+            }
+            await FollowupAsync(results.Join('\n'));
+        }
+
+        private string FetchNGram(int size, List<Message> messages)
+        {
+            messages = messages.Where(x=>x.Content.Split(" ").Length >= size).ToList();
+            Dictionary<string, int> dict = new();
+            foreach (var message in messages)
+            {
+                var msg = message.Content;
+                var res = ngrams(size, msg);
+                foreach (var gram in res)
+                {
+                    if (dict.ContainsKey(gram))
+                    {
+                        dict[gram]++;
+                    }
+                    else
+                    {
+                        dict[gram] = 1;
+                    }
+                }
+            }
+            dict = dict.Where(x => x.Value >= 5).OrderByDescending(x=>x.Value).Take(5).ToDictionary(dict => dict.Key, dict => dict.Value);
+            return dict.Select((kvPair, i) => $"{kvPair.Value} {kvPair.Key}").Join('\n');
+        }
+
+        private List<string> ngrams(int n, string str)
+        {
+            List<string> ngrams = new List<string>();
+            string[] words = str.Split(" ");
+            for (int i = 0; i < words.Length - n + 1; i++)
+                ngrams.Add(Concat(words, i, i + n));
+            return ngrams;
+        }
+
+        private string Concat(string[] words, int start, int end)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = start; i < end; i++)
+                sb.Append((i > start ? " " : "") + words[i]);
+            return sb.ToString();
         }
 
         private Dictionary<string, int> LoadMessages(int wordLength = 0)

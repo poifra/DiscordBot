@@ -52,7 +52,7 @@ namespace BaliBotDotNet.Model
             var sql = "SELECT * FROM Message M inner join Author A on A.AuthorID=M.AuthorID WHERE M.GuildID=@GuildID AND A.IsQuotable=1";
             if (authorID != 0)
             {
-                sql += "AND AuthorID=@AuthorID ";
+                sql += " AND M.AuthorID=@AuthorID ";
             }
             var parameters = new
             {
