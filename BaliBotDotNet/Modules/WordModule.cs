@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RunMode = Discord.Interactions.RunMode;
 
@@ -173,18 +174,19 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("count", "Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)
         {
+            await DeferAsync();
             if (word.IsNullOrEmpty())
             {
-                await RespondAsync("You must specify a word to search.");
+                await FollowupAsync("You must specify a word to search.");
             }
             var dict = LoadMessages();
             if (dict.TryGetValue(word, out int count))
             {
-                await RespondAsync($"The word \"{word}\" has been used {count} time(s).");
+                await FollowupAsync($"The word \"{word}\" has been used {count} time(s).");
             }
             else
             {
-                await RespondAsync("That word was never used in this server.");
+                await FollowupAsync("That word was never used in this server.");
             }
         }
         [SlashCommand("ngram", "Returns a list of n-grams by the user", runMode: RunMode.Async)]
@@ -212,7 +214,7 @@ namespace BaliBotDotNet.Modules
 
         private string FetchNGram(int size, List<Message> messages)
         {
-            messages = messages.Where(x=>x.Content.Split(" ").Length >= size).ToList();
+            messages = messages.Where(x => x.Content.Split(" ").Length >= size).ToList();
             Dictionary<string, int> dict = new();
             foreach (var message in messages)
             {
@@ -220,17 +222,25 @@ namespace BaliBotDotNet.Modules
                 var res = ngrams(size, msg);
                 foreach (var gram in res)
                 {
-                    if (dict.ContainsKey(gram))
+                    var cleanGram = Regex.Replace(gram, @"\p{Cs}", "");
+                    if (dict.ContainsKey(cleanGram))
                     {
-                        dict[gram]++;
+                        dict[cleanGram]++;
                     }
                     else
                     {
-                        dict[gram] = 1;
+                        dict[cleanGram] = 1;
                     }
                 }
             }
-            dict = dict.Where(x => x.Value >= 5).OrderByDescending(x=>x.Value).Take(5).ToDictionary(dict => dict.Key, dict => dict.Value);
+            dict = dict.Where(x => x.Value >= 5
+                            && !string.IsNullOrWhiteSpace(x.Key)
+                            && x.Key.Trim().Length > 1
+                            && !x.Key.Contains('|')
+                            && !x.Key.Contains('<'))
+                .OrderByDescending(x => x.Value)
+                .Take(5)
+                .ToDictionary(dict => dict.Key, dict => dict.Value);
             return dict.Select((kvPair, i) => $"{kvPair.Value} {kvPair.Key}").Join('\n');
         }
 

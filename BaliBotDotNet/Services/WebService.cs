@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -38,13 +39,15 @@ namespace BaliBotDotNet.Services
                 }
                 else
                 {
-                    resp = await _http.GetAsync("https://cataas.com/cat");
+                    resp = await _http.GetAsync("https://api.thecatapi.com/v1/images/search");
                 }
                 if (!resp.IsSuccessStatusCode)
                 {
                     return (null,resp.StatusCode);
                 }
-                return (await resp.Content.ReadAsStreamAsync(),resp.StatusCode);
+                using var document = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+                var image = await (await _http.GetAsync(document.RootElement[0].GetProperty("url").GetString())).Content.ReadAsStreamAsync();
+                return (image,resp.StatusCode);
             }
             catch (Exception) //who needs to be specific Kappa
             {
