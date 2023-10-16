@@ -29,7 +29,7 @@ namespace BaliBotDotNet.Modules
             var rate = await WebService.GetConversionRateAsync(source, destination);
             if (rate == null)
             {
-                await RespondAsync("Invalid currency or api is down");
+                await RespondAsync("Invalid currency or api is down, but most likely yell at Bali to update the key");
             }
             else
             {

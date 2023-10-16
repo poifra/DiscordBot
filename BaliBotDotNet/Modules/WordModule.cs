@@ -38,12 +38,21 @@ namespace BaliBotDotNet.Modules
             await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
         }
 
+        [SlashCommand("socialcredit", "Displays social credit")]
+        public async Task SocialCredit()
+        {
+            Random rng = new();
+            int credit = rng.Next(0, 500);
+            await RespondAsync($"You have {credit} social credits");
+        }
+
         [SlashCommand("messagecount", "Gets the message count of the user who calls the command")]
         public async Task MessageCountAsync()
         {
+            await DeferAsync();
             ulong authorID = Context.User.Id;
             var leaderboard = _messageRepository.GetAllMessages(Context.Guild.Id, authorID);
-            await RespondAsync($"You sent {leaderboard.Count} messages.");
+            await FollowupAsync($"You sent {leaderboard.Count} messages.");
         }
 
         [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
@@ -94,15 +103,16 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]
         public async Task WordLengthAsync(int wordLength = 1)
         {
+            await DeferAsync();
             if (wordLength <= 0)
             {
-                await RespondAsync("You must specify a minimum length greater than 0.");
+                await FollowupAsync("You must specify a minimum length greater than 0.");
                 return;
             }
 
             if (Context.User.Username.Equals("Luneth"))
             {
-                await RespondAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
+                await FollowupAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
@@ -110,17 +120,17 @@ namespace BaliBotDotNet.Modules
             var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
             if (string.IsNullOrEmpty(kv.Key))
             {
-                await RespondAsync($"There are no words that are {wordLength} letters long.");
+                await FollowupAsync($"There are no words that are {wordLength} letters long.");
             }
             else
             {
                 if (MentionUtils.TryParseUser(kv.Key, out ulong mention))
                 {
-                    await RespondAsync("This would ping someone :(");
+                    await FollowupAsync("This would ping someone :(");
                 }
                 else
                 {
-                    await RespondAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
+                    await FollowupAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
                 }
             }
         }

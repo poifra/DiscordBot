@@ -102,7 +102,7 @@ namespace BaliBotDotNet.Services
 
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             string conversion = $"{source.ToUpper()}_{destination.ToUpper()}";
-            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v5/convert?q={conversion}&compact=y&apiKey={token}");
+            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v7/convert?q={conversion}&compact=y&apiKey={token}");
             if (!jsonResponse.IsSuccessStatusCode)
             {
                 return null;
