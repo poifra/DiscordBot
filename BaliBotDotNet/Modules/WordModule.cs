@@ -3,6 +3,7 @@ using BaliBotDotNet.Models;
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Interactions;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -162,13 +163,22 @@ namespace BaliBotDotNet.Modules
             await RespondAsync($"{answer}");
         }
 
-        [SlashCommand("quote", "Quotes someone at random, without context",runMode:RunMode.Async)]
-        public async Task Quote()
+        [SlashCommand("quote", "Quotes someone at random, without context", runMode: RunMode.Async)]
+        public async Task Quote(SocketGuildUser user = null)
         {
             await DeferAsync();
-            var messageList = _messageRepository.GetAllMessages(Context.Guild.Id);
+            var messageList = user == null ? 
+                  _messageRepository.GetAllMessages(Context.Guild.Id) 
+                : _messageRepository.GetAllMessages(Context.Guild.Id,user.Id);
             var rng = new Random();
             var index = rng.Next(messageList.Count);
+
+            if (index <= 0)
+            {
+                await FollowupAsync($"This person either has no messages or doesn't wish to be quoted.");
+                return;
+            }
+
             var message = messageList[index];
             while (message.Content.Contains('@') || message.Content.Equals(""))
             {

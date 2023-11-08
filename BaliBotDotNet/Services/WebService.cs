@@ -32,10 +32,12 @@ namespace BaliBotDotNet.Services
                 if (word.Equals("cute"))
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat/cute");
+                    return (await resp.Content.ReadAsStreamAsync(), resp.StatusCode);
                 }
                 else if (word.Equals("gif"))
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat/gif");
+                    return (await resp.Content.ReadAsStreamAsync(), resp.StatusCode);
                 }
                 else
                 {
