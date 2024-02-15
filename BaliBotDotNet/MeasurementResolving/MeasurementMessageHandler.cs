@@ -2,8 +2,10 @@ namespace BalibotTest.MeasurementResolving
 {
     public static class MeasurementMessageHandler
     {
+	    private const float MinAmountToConvert = -9999999; //added to prevent balibot from triggering when people are exaggerating
+	    private const float MaxAmountToConvert = 9999999;
 
-        public static string TryConvertMessage(string message)
+	    public static string TryConvertMessage(string message)
         {
 
             var regexMatches = MeasurementRegexHandler.GetMeasurementsFromMessage(message);
@@ -13,7 +15,9 @@ namespace BalibotTest.MeasurementResolving
             foreach (var regexMatch in regexMatches)
             {
                 var conversionResult = MeasurementConversionHandler.TryConvertFrom(regexMatch);
-                if (conversionResult != null)
+                if (conversionResult != null && conversionResult.Amount != 0 
+                                             && conversionResult.Amount is > MinAmountToConvert and < MaxAmountToConvert 
+                                             && (conversionResult.CanBeNegative || conversionResult.Amount > 0))
                 {
                     resultMessage += regexMatch.ToString() + " is " + conversionResult.ToString() + ", ";
                 }

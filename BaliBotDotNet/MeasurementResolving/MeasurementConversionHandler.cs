@@ -16,7 +16,7 @@ namespace BalibotTest.MeasurementResolving
                     return new Measurement(
                         (measurement.Amount + conversion.offset) * conversion.conversionRate,
                         conversion.second.Split(',').FirstOrDefault(),
-                        conversion.isExact
+                        conversion.canBeNegative
                         );
                 }
                 if (conversion.second.Split(',').Contains(measurement.Name.ToLower()))
@@ -24,7 +24,7 @@ namespace BalibotTest.MeasurementResolving
                     return new Measurement(
                         (measurement.Amount / conversion.conversionRate) - conversion.offset,
                         conversion.first.Split(',').FirstOrDefault(),
-                        conversion.isExact
+                        conversion.canBeNegative
                     );
                 }
             }
@@ -48,16 +48,17 @@ namespace BalibotTest.MeasurementResolving
         }
 
         private static readonly List<(string first, string second,
-            float conversionRate, float offset, bool isExact)> ConversionValues =
+            float conversionRate, float offset, bool canBeNegative)> ConversionValues =
             new()
             {
-                ("ft,feet", "m,meter,meters", 0.3054f, 0, true),
-                ("ac,acre,acres", "meters squared",4046.9f,0,true),
-                ("inch,inches", "cm", 2.54f, 0, true),
-                ("°f,f,fahrenheit", "°c,c,celsius", 0.5555f, -32, true),
-                ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, true),
-                ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
-                ("foot candle,fc,ft-c,foot-candle","lumen,lumens",10.76f,0,true)
+				("ft,feet", "m,meter,meters", 0.3054f, 0, false),
+                ("ac,acre,acres", "meters squared",4046.9f,0,false),
+                ("inch,inches", "cm", 2.54f, 0, false),
+                ("Â°f,f,fahrenheit", "Â°c,c,celsius", 0.5555f, -32, true),
+                ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, false),
+                ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, false),
+                ("foot candle,fc,ft-c,foot-candle","lumen,lumens",10.76f,0,false)
+
             };
 
     }
