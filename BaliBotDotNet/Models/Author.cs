@@ -4,8 +4,6 @@
     {
         public ulong AuthorID { get; set; }
         public string Username { get; set; }
-        public int DiscordID { get; set; }
-
         public bool IsQuotable { get; set; }
     }
 }
