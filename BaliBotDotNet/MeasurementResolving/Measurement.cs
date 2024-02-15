@@ -4,7 +4,7 @@ namespace BalibotTest.MeasurementResolving
     {
         public float Amount;
         public string Name;
-        public bool canBeNegative;
+        public bool CanBeNegative;
 
         public Measurement(float amount, string name, bool canBeNegative = true)
         {
@@ -15,7 +15,7 @@ namespace BalibotTest.MeasurementResolving
 
         public override string ToString()
         {
-            return (canBeNegative ? "" : "about ") + Amount.ToString("0.##") + " " + Name;
+            return Amount.ToString("0.##") + " " + Name;
         }
     }
 }

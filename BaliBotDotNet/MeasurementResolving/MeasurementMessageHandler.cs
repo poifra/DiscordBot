@@ -17,7 +17,7 @@ namespace BalibotTest.MeasurementResolving
                 var conversionResult = MeasurementConversionHandler.TryConvertFrom(regexMatch);
                 if (conversionResult != null && conversionResult.Amount != 0 
                                              && conversionResult.Amount is > MinAmountToConvert and < MaxAmountToConvert 
-                                             && (conversionResult.canBeNegative || conversionResult.Amount > 0))
+                                             && (conversionResult.CanBeNegative || conversionResult.Amount > 0))
                 {
                     resultMessage += regexMatch.ToString() + " is " + conversionResult.ToString() + ", ";
                 }
