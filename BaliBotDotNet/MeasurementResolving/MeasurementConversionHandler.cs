@@ -16,7 +16,7 @@ namespace BalibotTest.MeasurementResolving
                     return new Measurement(
                         (measurement.Amount + conversion.offset) * conversion.conversionRate,
                         conversion.second.Split(',').FirstOrDefault(),
-                        conversion.isExact
+                        conversion.canBeNegative
                         );
                 }
                 if (conversion.second.Split(',').Contains(measurement.Name.ToLower()))
@@ -24,7 +24,7 @@ namespace BalibotTest.MeasurementResolving
                     return new Measurement(
                         (measurement.Amount / conversion.conversionRate) - conversion.offset,
                         conversion.first.Split(',').FirstOrDefault(),
-                        conversion.isExact
+                        conversion.canBeNegative
                     );
                 }
             }
@@ -48,18 +48,14 @@ namespace BalibotTest.MeasurementResolving
         }
 
         private static readonly List<(string first, string second,
-            float conversionRate, float offset, bool isExact)> ConversionValues =
+            float conversionRate, float offset, bool canBeNegative)> ConversionValues =
             new()
             {
-                ("ft,feet", "m,meter,meters", 0.3054f, 0, true),
-                ("inch,inches", "cm", 2.54f, 0, true),
+                ("ft,feet", "m,meter,meters", 0.3054f, 0, false),
+                ("inch,inches", "cm", 2.54f, 0, false),
                 ("f,fahrenheit", "c,celsius", 0.5555f, -32, true),
-                ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, true),
-                ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, true),
-                ("$,dollar,dollars,usd", "euro,euros,eur", 0.86f, 0, false),
-                ("cad", "$", 0.80f, 0, false),
-                ("rsd", "$", 0.0099f, 0, false),
-                ("£", "$", 1.36f, 0, false),
+                ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, false),
+                ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, false),
             };
 
     }

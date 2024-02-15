@@ -4,18 +4,18 @@ namespace BalibotTest.MeasurementResolving
     {
         public float Amount;
         public string Name;
-        public bool IsExact;
+        public bool canBeNegative;
 
-        public Measurement(float amount, string name, bool isExact = true)
+        public Measurement(float amount, string name, bool canBeNegative = true)
         {
             Amount = amount;
             Name = name;
-            IsExact = isExact;
+            canBeNegative = canBeNegative;
         }
 
         public override string ToString()
         {
-            return (IsExact ? "" : "about ") + Amount.ToString("0.##") + " " + Name;
+            return (canBeNegative ? "" : "about ") + Amount.ToString("0.##") + " " + Name;
         }
     }
 }
