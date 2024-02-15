@@ -86,7 +86,7 @@ namespace BaliBotDotNet.Model
                 con = SqlCon;
             }
             var sqlMessage = "INSERT OR IGNORE INTO Message (MessageID, AuthorID, GuildID, Content, DateSent) VALUES (@MessageID, @AuthorID, @GuildID, @Content, @Date)";
-            var sqlAuthor = "INSERT OR IGNORE INTO Author (AuthorID, Username, DiscordID) VALUES (@AuthorID, @Username, @DiscordID)";
+            var sqlAuthor = "INSERT OR IGNORE INTO Author (AuthorID, Username) VALUES (@AuthorID, @Username)";
             var messageParameters = new
             {
                 MessageID = discordMessage.Id,
@@ -96,12 +96,11 @@ namespace BaliBotDotNet.Model
                 Date = discordMessage.Timestamp.DateTime.ToString(CultureInfo.InvariantCulture),
             };
 
-            string[] userInfo = discordMessage.Author.ToString().Split('#');
+            string userInfo = discordMessage.Author.ToString();
             var authorParameters = new
             {
                 AuthorID = discordMessage.Author.Id,
-                Username = userInfo[0],
-                DiscordID = int.Parse(userInfo[1])
+                Username = userInfo
 
             };
             if (con.State != System.Data.ConnectionState.Open)

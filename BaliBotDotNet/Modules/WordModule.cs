@@ -59,13 +59,15 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
         public async Task ReloadAsync(bool reloadSingleChannel = false)
         {
-            if (!Context.User.Username.Equals("Bali"))
+            if (!Context.User.Username.Equals("thebali"))
             {
                 await RespondAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
-            await RespondAsync("Loading....");
+            await DeferAsync(false);
+
+            await FollowupAsync("Loading....");
             const int messageCount = 10_000_000;
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
@@ -98,7 +100,7 @@ namespace BaliBotDotNet.Modules
                 }
                 numberOfProcessedMessages += messages?.Count() ?? 0;
             }
-            await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
+            await FollowupAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
         [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]

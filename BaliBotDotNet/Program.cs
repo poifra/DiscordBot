@@ -25,7 +25,7 @@ namespace BaliBotDotNet
         IMessageRepository _messageRepository;
         private readonly IConfiguration _configuration;
         private readonly IServiceProvider _services;
-
+        private char? forbiddenLetter = null;
         private readonly DiscordSocketConfig _socketConfig = new()
         {
             GatewayIntents = GatewayIntents.AllUnprivileged | GatewayIntents.GuildMembers | GatewayIntents.MessageContent,
@@ -55,7 +55,7 @@ namespace BaliBotDotNet
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
             _messageRepository = new MessageRepository();
         }
-        static void Main(string[] args) 
+        static void Main(string[] args)
             => new Program()
             .RunAsync()
             .GetAwaiter()
@@ -96,7 +96,22 @@ namespace BaliBotDotNet
                     _messageRepository.InsertMessage(message, guild);
                 }
             }
-
+            var date = DateTime.Now;
+            if (date.Month == 11 && date.Day == 29)
+            {
+                if (forbiddenLetter == null)
+                {
+                    char[] alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToLower().ToCharArray();
+                    var rng = new Random();
+                    var forbidden = alpha[rng.Next(alpha.Length)];
+                    forbiddenLetter = forbidden;
+                }
+                if (message.Content.Contains(forbiddenLetter.Value))
+                {
+                    await message.Channel.DeleteMessageAsync(message);
+                }
+            }
+          
             if (message.Content.ToLower().Contains("thanks balibot"))
             {
                 await message.Channel.SendMessageAsync("You're welcome!");
@@ -118,11 +133,11 @@ namespace BaliBotDotNet
 
         public static bool IsDebug()
         {
-            #if DEBUG
-                return true;
-            #else
+#if DEBUG
+            return true;
+#else
                 return false;
-            #endif
+#endif
         }
     }
 }
