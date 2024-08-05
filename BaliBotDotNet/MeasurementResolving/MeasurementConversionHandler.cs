@@ -49,17 +49,17 @@ namespace BalibotTest.MeasurementResolving
 
         private static readonly List<(string first, string second,
             float conversionRate, float offset, bool canBeNegative)> ConversionValues =
-            new()
-            {
+            [
 				("ft,feet", "m,meter,meters", 0.3054f, 0, false),
                 ("ac,acre,acres", "meters squared",4046.9f,0,false),
                 ("inch,inches", "cm", 2.54f, 0, false),
                 ("°f,f,fahrenheit", "°c,c,celsius", 0.5555f, -32, true),
                 ("kg,kilo,kilogram,kilos,kilograms", "pounds,lb,pound,lbs", 2.2046f, 0, false),
                 ("km,kilometer,kilometers", "miles,mile,mi", 0.6213f, 0, false),
-                ("foot candle,fc,ft-c,foot-candle","lumen,lumens",10.76f,0,false)
+                ("foot candle,fc,ft-c,foot-candle","lumen,lumens",10.76f,0,false),
+                ("kmh, km/h","mph",0.6213f,0,false)
 
-            };
+            ];
 
     }
 }

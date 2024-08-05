@@ -15,15 +15,10 @@ using RunMode = Discord.Interactions.RunMode;
 
 namespace BaliBotDotNet.Modules
 {
-    public class WordModule : InteractionModuleBase<SocketInteractionContext>
+    public class WordModule(IMessageRepository messageRepository, IAuthorRepository authorRepository) : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly IMessageRepository _messageRepository;
-        private readonly IAuthorRepository _authorRepository;
-        public WordModule(IMessageRepository messageRepository, IAuthorRepository authorRepository)
-        {
-            _messageRepository = messageRepository;
-            _authorRepository = authorRepository;
-        }
+        private readonly IMessageRepository _messageRepository = messageRepository;
+        private readonly IAuthorRepository _authorRepository = authorRepository;
 
         [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
@@ -215,7 +210,7 @@ namespace BaliBotDotNet.Modules
         public async Task DisplayNGrams(int size = 0)
         {
             await DeferAsync();
-            List<string> results = new();
+            List<string> results = [];
             var messages = _messageRepository.GetAllMessages(Context.Guild.Id, Context.User.Id);
 
             if (size != 0)
@@ -237,7 +232,7 @@ namespace BaliBotDotNet.Modules
         private string FetchNGram(int size, List<Message> messages)
         {
             messages = messages.Where(x => x.Content.Split(" ").Length >= size).ToList();
-            Dictionary<string, int> dict = new();
+            Dictionary<string, int> dict = [];
             foreach (var message in messages)
             {
                 var msg = message.Content;
@@ -245,9 +240,9 @@ namespace BaliBotDotNet.Modules
                 foreach (var gram in res)
                 {
                     var cleanGram = Regex.Replace(gram, @"\p{Cs}", "");
-                    if (dict.ContainsKey(cleanGram))
+                    if (dict.TryGetValue(cleanGram, out int value))
                     {
-                        dict[cleanGram]++;
+                        dict[cleanGram] = ++value;
                     }
                     else
                     {
@@ -268,7 +263,7 @@ namespace BaliBotDotNet.Modules
 
         private List<string> ngrams(int n, string str)
         {
-            List<string> ngrams = new List<string>();
+            List<string> ngrams = [];
             string[] words = str.Split(" ");
             for (int i = 0; i < words.Length - n + 1; i++)
                 ngrams.Add(Concat(words, i, i + n));
@@ -277,7 +272,7 @@ namespace BaliBotDotNet.Modules
 
         private string Concat(string[] words, int start, int end)
         {
-            StringBuilder sb = new StringBuilder();
+            StringBuilder sb = new();
             for (int i = start; i < end; i++)
                 sb.Append((i > start ? " " : "") + words[i]);
             return sb.ToString();
@@ -286,19 +281,19 @@ namespace BaliBotDotNet.Modules
         private Dictionary<string, int> LoadMessages(int wordLength = 0)
         {
             var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
-            Dictionary<string, int> dict = new();
+            Dictionary<string, int> dict = [];
             foreach (var m in messages)
             {
-                IEnumerable<string> words = m.Content.Split(' ').ToList();
+                IEnumerable<string> words = [.. m.Content.Split(' ')];
                 if (wordLength != 0)
                 {
                     words = words.Where(x => x.Length == wordLength);
                 }
                 foreach (var w in words)
                 {
-                    if (dict.ContainsKey(w))
+                    if (dict.TryGetValue(w, out int value))
                     {
-                        dict[w]++;
+                        dict[w] = ++value;
                     }
                     else
                     {

@@ -80,6 +80,8 @@ namespace BaliBotDotNet
 
         private async Task MessageHandler(SocketMessage message)
         {
+            SocketGuild guild = (message.Channel as SocketGuildChannel)?.Guild;
+       
             if (message.Author.Username == "subpixelmaster4000")
             {
                 return;
@@ -90,14 +92,14 @@ namespace BaliBotDotNet
             }
             if (!message.Content.StartsWith("$"))
             {
-                SocketGuild guild = (message.Channel as SocketGuildChannel)?.Guild;
+               // SocketGuild guild = (message.Channel as SocketGuildChannel)?.Guild;
                 if (guild != null) // if its not a dm
                 {
                     _messageRepository.InsertMessage(message, guild);
                 }
             }
             var date = DateTime.Now;
-            if (date.Month == 11 && date.Day == 29)
+            if (date.Month == 04 && date.Day == 01)
             {
                 if (forbiddenLetter == null)
                 {
@@ -105,10 +107,13 @@ namespace BaliBotDotNet
                     var rng = new Random();
                     var forbidden = alpha[rng.Next(alpha.Length)];
                     forbiddenLetter = forbidden;
+                    await message.Channel.SendMessageAsync($"The letter {forbiddenLetter} cannot be used today!");
                 }
-                if (message.Content.Contains(forbiddenLetter.Value))
+                if (message.Content.ToLower().Contains(forbiddenLetter.Value))
                 {
                     await message.Channel.DeleteMessageAsync(message);
+                    string realMessage = message.Content.Replace(forbiddenLetter.Value.ToString(), "*");
+                    await message.Channel.SendMessageAsync($"What {message.Author.GlobalName} meant to say is \"{realMessage}\"");
                 }
             }
           
