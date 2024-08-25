@@ -22,7 +22,7 @@ namespace BaliBotDotNet
     public class Program
     {
         readonly UOMConverter Converter = new();
-        IMessageRepository _messageRepository;
+        readonly IMessageRepository _messageRepository;
         private readonly IConfiguration _configuration;
         private readonly IServiceProvider _services;
         private char? forbiddenLetter = null;
@@ -90,7 +90,7 @@ namespace BaliBotDotNet
             {
                 return;
             }
-            if (!message.Content.StartsWith("$"))
+            if (!message.Content.StartsWith('$'))
             {
                // SocketGuild guild = (message.Channel as SocketGuildChannel)?.Guild;
                 if (guild != null) // if its not a dm
@@ -117,7 +117,7 @@ namespace BaliBotDotNet
                 }
             }
           
-            if (message.Content.ToLower().Contains("thanks balibot"))
+            if (message.Content.Contains("thanks balibot", StringComparison.CurrentCultureIgnoreCase))
             {
                 await message.Channel.SendMessageAsync("You're welcome!");
             }

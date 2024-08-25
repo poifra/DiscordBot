@@ -12,16 +12,11 @@ using Discord;
 
 namespace BaliBotDotNet.Modules
 {
-    public class WebModule : InteractionModuleBase<SocketInteractionContext>
+    public class WebModule(IMessageRepository messageRepository) : InteractionModuleBase<SocketInteractionContext>
     {
         // Dependency Injection will fill these values in for us
         public WebService WebService { get; set; }
-        public IMessageRepository _messageRepository { get; set; }
-
-        public WebModule(IMessageRepository messageRepository)
-        {
-            _messageRepository = messageRepository;
-        }
+        public IMessageRepository MessageRepository { get; set; } = messageRepository;
 
         [SlashCommand("convertcurrency", "Converts from currency A to currency B.")]
         public async Task ConvertAsync(float amount, string source, string destination)
@@ -41,8 +36,8 @@ namespace BaliBotDotNet.Modules
         public async Task EightBall()
         {
             var random = new Random();
-            List<string> answers = new()
-            {
+            List<string> answers =
+            [
                 "It is certain",
                 "It is decidedly so",
                 "Without a doubt",
@@ -66,7 +61,7 @@ namespace BaliBotDotNet.Modules
                 "My sources say no",
                 "Outlook not so good",
                 "Very doubtful"
-            };
+            ];
             await RespondAsync(answers[random.Next(answers.Count)]);
         }
 
@@ -153,6 +148,13 @@ namespace BaliBotDotNet.Modules
         {
             string joke = await WebService.GetDadJokeAsync();
             await RespondAsync(joke);
+        }
+
+        [SlashCommand("fact", "Gets a fact")]
+        public async Task FactAsync()
+        {
+            string fact = await WebService.GetFactAsync();
+            await RespondAsync(fact);
         }
 
         [SlashCommand("xkcd", "Gets an XKCD comic.")]

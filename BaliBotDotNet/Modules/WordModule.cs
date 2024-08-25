@@ -4,6 +4,7 @@ using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
+using NHunspell;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -236,7 +237,7 @@ namespace BaliBotDotNet.Modules
             foreach (var message in messages)
             {
                 var msg = message.Content;
-                var res = ngrams(size, msg);
+                var res = Ngrams(size, msg);
                 foreach (var gram in res)
                 {
                     var cleanGram = Regex.Replace(gram, @"\p{Cs}", "");
@@ -261,7 +262,7 @@ namespace BaliBotDotNet.Modules
             return dict.Select((kvPair, i) => $"{kvPair.Value} {kvPair.Key}").Join('\n');
         }
 
-        private List<string> ngrams(int n, string str)
+        private List<string> Ngrams(int n, string str)
         {
             List<string> ngrams = [];
             string[] words = str.Split(" ");
@@ -270,7 +271,7 @@ namespace BaliBotDotNet.Modules
             return ngrams;
         }
 
-        private string Concat(string[] words, int start, int end)
+        private static string Concat(string[] words, int start, int end)
         {
             StringBuilder sb = new();
             for (int i = start; i < end; i++)
@@ -302,6 +303,13 @@ namespace BaliBotDotNet.Modules
                 }
             }
             return dict;
+        }
+
+        private static int CountSyllabes(string word)
+        {
+            Hyphen hyphen = new Hyphen("hyph_en_US.dic");
+            Console.WriteLine(hyphen.Hyphenate("peaceful").HyphenationPoints.Length);
+            return 0;
         }
     }
 }

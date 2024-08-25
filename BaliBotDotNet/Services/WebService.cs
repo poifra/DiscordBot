@@ -13,15 +13,10 @@ namespace BaliBotDotNet.Services
     public class WebService
     {
         private readonly HttpClient _http;
-        private Dictionary<string, Func<Task<Stream>>> _animals;
         public WebService(HttpClient http)
         {
             _http = http;
             _http.Timeout = TimeSpan.FromSeconds(5);
-            _animals = new Dictionary<string, Func<Task<Stream>>>
-            {
-                { "duck", GetDuckPictureAsync }
-            };
         }
 
         internal async Task<(Stream,HttpStatusCode)> GetCatPictureAsync(string word = "")
@@ -163,6 +158,19 @@ namespace BaliBotDotNet.Services
             }
             using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
             return document.RootElement.GetProperty("joke").ToString();
+        }
+
+        internal async Task<string> GetFactAsync()
+        {
+            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var jsonResponse = await _http.GetAsync("https://uselessfacts.jsph.pl/api/v2/facts/random");
+            if (!jsonResponse.IsSuccessStatusCode)
+            {
+                return null;
+            }
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            return document.RootElement.GetProperty("text").ToString();
+       
         }
     }
 
