@@ -13,7 +13,7 @@ namespace BalibotTest.MeasurementResolving
         {
             Amount = amount;
             Name = name;
-            canBeNegative = canBeNegative;
+            CanBeNegative = canBeNegative;
         }
 
         public override string ToString()

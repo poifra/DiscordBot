@@ -15,8 +15,8 @@ namespace BaliBotDotNet.Services
         private readonly HttpClient _http;
         public WebService(HttpClient http)
         {
-            _http = http;
-            _http.Timeout = TimeSpan.FromSeconds(5);
+            _http = http; 
+            _http.Timeout = TimeSpan.FromSeconds(10);
         }
 
         internal async Task<(Stream,HttpStatusCode)> GetCatPictureAsync(string word = "")
@@ -50,12 +50,6 @@ namespace BaliBotDotNet.Services
             {
                 return (null,HttpStatusCode.RequestTimeout);
             }
-        }
-
-        internal async Task<string> Get8BallAnswer()
-        {
-            var response = await _http.GetAsync("https://customapi.aidenwallis.co.uk/api/v1/misc/8ball");
-            return await response.Content.ReadAsStringAsync();
         }
 
         internal async Task<Stream> GetDogPictureAsync()
@@ -92,7 +86,7 @@ namespace BaliBotDotNet.Services
             return image;
         }
 
-        internal async Task<float?> GetConversionRateAsync(string source, string destination)
+        internal async Task<(HttpStatusCode, float?)> GetConversionRateAsync(string source, string destination)
         {
             using var jsonConfig = JsonDocument.Parse(File.ReadAllText(Environment.CurrentDirectory + "\\config.json"));
             string token = jsonConfig.RootElement.GetProperty("currencyKey").GetString();
@@ -100,20 +94,22 @@ namespace BaliBotDotNet.Services
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             string conversion = $"{source.ToUpper()}_{destination.ToUpper()}";
             var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v7/convert?q={conversion}&compact=y&apiKey={token}");
-            if (!jsonResponse.IsSuccessStatusCode)
-            {
-                return null;
-            }
-            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
-            try
-            {
-                return float.Parse(document.RootElement.GetProperty(conversion).GetProperty("val").ToString());
-            }
-            catch (KeyNotFoundException)
-            {
-                return null;
-            }
+            float? conversionValue = null;
 
+            if (jsonResponse.IsSuccessStatusCode)
+            {
+                try
+                {
+                    using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+                    return (HttpStatusCode.OK, float.Parse(document.RootElement.GetProperty(conversion).GetProperty("val").ToString()));
+                }
+                catch (KeyNotFoundException)
+                {
+                    return (HttpStatusCode.NotAcceptable, null);
+                }
+
+            }
+            return (jsonResponse.StatusCode, conversionValue) ;
         }
 
         internal async Task<XKCDContainer> GetXKCDAsync(int? id, bool getRandom = false)

@@ -5,11 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
-using System.Text.RegularExpressions;
 using Discord.Interactions;
-using RunMode = Discord.Interactions.RunMode;
-using Discord;
-
 namespace BaliBotDotNet.Modules
 {
     public class WebModule(IMessageRepository messageRepository) : InteractionModuleBase<SocketInteractionContext>
@@ -21,19 +17,30 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("convertcurrency", "Converts from currency A to currency B.")]
         public async Task ConvertAsync(float amount, string source, string destination)
         {
-            var rate = await WebService.GetConversionRateAsync(source, destination);
-            if (rate == null)
+            var (status, rate) = await WebService.GetConversionRateAsync(source, destination);
+
+            switch (status)
             {
-                await RespondAsync("Invalid currency or api is down, but most likely yell at Bali to update the key");
-            }
-            else
-            {
-                await RespondAsync($"{amount} {source} is {string.Format("{0:0.00}", (amount * rate))} {destination}");
-            }
+                default:
+                    await RespondAsync($"{amount} {source} is {string.Format("{0:0.00}", (amount * rate))} {destination}");
+                break;
+
+                case HttpStatusCode.BadRequest:
+                    await RespondAsync("Key needs an update.");
+                break;
+
+                case HttpStatusCode.NotAcceptable:
+                    await RespondAsync("Invalid currency.");
+                break;
+
+                case HttpStatusCode.RequestTimeout:
+                    await RespondAsync("API Down?");
+                break;
+            } 
         }
 
         [SlashCommand("8ball", "Predicts the future")]
-        public async Task EightBall()
+        public async Task EightBall(string question="")
         {
             var random = new Random();
             List<string> answers =
