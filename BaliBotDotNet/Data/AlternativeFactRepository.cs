@@ -11,53 +11,28 @@ using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Data
 {
-    public class AlternativeFactRepository : SqlLiteBaseRepository, IAlternativeFactRepository
+    public class AlternativeFactRepository : IAlternativeFactRepository
     {
-        public AlternativeFactRepository() : base()
+        private readonly BaliBotDbContext _db;
+        public AlternativeFactRepository(BaliBotDbContext dbContext)
         {
-
+            _db = dbContext;
         }
         public List<AlternativeFact> GetFactList(int factID = -1)
         {
-            IEnumerable<AlternativeFact> factList;
-            var con = SqlCon;
-            if (con.State != System.Data.ConnectionState.Open)
+            IQueryable<AlternativeFact> rs = _db.AlternativeFacts;
+            if (factID != -1)
             {
-                con.Open();
+                rs = rs.Where(x => x.AlternativeFactID == factID);
             }
-            string sql;
-            if (factID == -1)
-            {
-                sql = "SELECT * FROM AlternativeFact WHERE 1=1 ";
-            }
-            else
-            {
-                sql = "SELECT * FROM AlternativeFact WHERE AlternativeFactID=@AlternativeFactID ";
-            }
-
-            var parameters = new
-            {
-                AlternativeFactID = factID,
-            };
-            factList = con.Query<AlternativeFact>(sql, parameters);
-            return factList.AsList();
+            return rs.ToList();
         }
 
         public void WriteFact(string description, ulong AuthorID)
         {
-            var con = SqlCon;
-            if (con.State != System.Data.ConnectionState.Open)
-            {
-                con.Open();
-            }
+            _db.AlternativeFacts.Add(new AlternativeFact {Description = description, AuthorID = AuthorID});
+            _db.SaveChanges();
 
-            var sql = "INSERT OR IGNORE INTO AlternativeFact (Description, AuthorID) VALUES (@Description, @AuthorID)";
-            var parameters = new
-            {
-                Description = description,
-                AuthorID
-            };
-            con.Execute(sql, parameters);
         }
     }
 }

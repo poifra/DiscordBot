@@ -1,31 +1,20 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
-using Dapper;
 using System.Linq;
 
 namespace BaliBotDotNet.Data
 {
-    public class AuthorRepository : SqlLiteBaseRepository, IAuthorRepository
+    public class AuthorRepository : IAuthorRepository
     {
-        public AuthorRepository() : base()
-        {
+        private readonly BaliBotDbContext _db;
 
+        public AuthorRepository(BaliBotDbContext dbContext)
+        {
+            _db = dbContext;
         }
         public Author GetAuthor(ulong authorID)
         {
-            Author author;
-            var con = SqlCon;
-            if (con.State != System.Data.ConnectionState.Open)
-            {
-                con.Open();
-            }
-            var sql = "SELECT * FROM Author WHERE AuthorID=@AuthorID ";
-            var parameters = new
-            {
-                AuthorID = authorID,
-            };
-            author = con.Query<Author>(sql, parameters).FirstOrDefault();
-            return author;
+            return _db.Authors.Where(x=>x.AuthorID ==  authorID).FirstOrDefault();
         }
     }
 }

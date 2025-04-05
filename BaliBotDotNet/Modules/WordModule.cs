@@ -34,7 +34,7 @@ namespace BaliBotDotNet.Modules
                 return;
             }
             var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
-            await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
+            await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.User} {kvPair.Count}").Join('\n'));
         }
 
         [SlashCommand("socialcredit", "Displays social credit")]

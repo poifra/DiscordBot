@@ -1,5 +1,7 @@
-﻿using Dapper;
+﻿using BaliBotDotNet.Models;
+using Dapper;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
 
@@ -8,6 +10,7 @@ namespace BaliBotDotNet.Data
     public class SqlLiteBaseRepository
     {
         private static SqliteConnection _connection = null;
+        public static BaliBotDbContext _dbContext;
         public static SqliteConnection SqlCon
         {
             get
@@ -21,8 +24,9 @@ namespace BaliBotDotNet.Data
             get { return Environment.CurrentDirectory + "\\BaliBotDB.sqlite"; }
         }
 
-        internal SqlLiteBaseRepository()
+        internal SqlLiteBaseRepository(BaliBotDbContext dbContext)
         {
+            _dbContext = dbContext;
             ValidateDatabaseStructure();
         }
         private static void ValidateDatabaseStructure()

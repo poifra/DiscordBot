@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace BaliBotDotNet.Models
+namespace BaliBotDotNet.Models;
+
+public class AlternativeFact
 {
-    public class AlternativeFact
-    {
-        public int FactID { get; set; }
-        public string Description { get; set; }
-        public ulong AuthorID { get; set; }
-    }
+    public int AlternativeFactID { get; set; }
+
+    public string Description { get; set; }
+
+    public ulong AuthorID { get; set; }
+
+    public virtual Author Author { get; set; }
 }

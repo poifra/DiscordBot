@@ -11,7 +11,7 @@ namespace BaliBotDotNet.Data.Interfaces
         void InsertMessage(IMessage message, SocketGuild guild, SqliteConnection con = null);
         void InsertBulkMessage(IEnumerable<IMessage> messages, SocketGuild guild);
         List<Message> GetAllMessages(ulong guildID, ulong authorID = 0);
-        Dictionary<string, int> GetLeaderboard(ulong guildID, int maximum = 10);
+        List<LeaderboardGrouping> GetLeaderboard(ulong guildID, int maximum = 10);
         void DropMessages(ulong id);
     }
 }

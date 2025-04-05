@@ -1,6 +1,5 @@
 ﻿using BaliBotDotNet.Data;
 using BaliBotDotNet.Data.Interfaces;
-using BaliBotDotNet.Model;
 using BaliBotDotNet.Services;
 using BaliBotDotNet.Utilities.UOM;
 using BalibotTest.MeasurementResolving;
@@ -16,14 +15,15 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
+using BaliBotDotNet.Models;
 
 namespace BaliBotDotNet
 {
     public class Program
     {
         readonly UOMConverter Converter = new();
-        readonly IMessageRepository _messageRepository;
         private readonly IConfiguration _configuration;
+        private readonly MessageRepository _messageRepository;
         private readonly IServiceProvider _services;
         private char? forbiddenLetter = null;
         private readonly DiscordSocketConfig _socketConfig = new()
@@ -48,13 +48,14 @@ namespace BaliBotDotNet
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
+                .AddDbContext<BaliBotDbContext>()
                 .AddSingleton<IMessageRepository, MessageRepository>()
                 .AddSingleton<IReminderRepository, ReminderRepository>()
                 .AddSingleton<IAuthorRepository, AuthorRepository>()
                 .AddSingleton<IAlternativeFactRepository, AlternativeFactRepository>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
-            _messageRepository = new MessageRepository();
+            _messageRepository = new MessageRepository(new BaliBotDbContext());
         }
         static void Main(string[] args)
             => new Program()
