@@ -4,7 +4,6 @@ using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
-using NHunspell;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -325,13 +324,6 @@ namespace BaliBotDotNet.Modules
                 }
             }
             return dict;
-        }
-
-        private static int CountSyllabes(string word)
-        {
-            Hyphen hyphen = new Hyphen("hyph_en_US.dic");
-            Console.WriteLine(hyphen.Hyphenate("peaceful").HyphenationPoints.Length);
-            return 0;
         }
     }
 }
