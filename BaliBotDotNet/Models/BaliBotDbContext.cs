@@ -36,7 +36,7 @@ public partial class BaliBotDbContext : DbContext
         {
             entity.ToTable("AlternativeFact");
 
-            entity.Property(e => e.AlternativeFactID).ValueGeneratedNever();
+            entity.Property(e => e.AlternativeFactID).ValueGeneratedOnAdd();
             entity.Property(e => e.AuthorID).HasColumnName("AuthorID");
             entity.Property(e => e.Description).IsRequired();
 
