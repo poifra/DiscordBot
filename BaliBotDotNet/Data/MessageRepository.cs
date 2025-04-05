@@ -11,13 +11,9 @@ using System.Linq;
 
 namespace BaliBotDotNet.Data
 {
-    public class MessageRepository : IMessageRepository
+    public class MessageRepository(BaliBotDbContext dbContext) : IMessageRepository
     {
-        private readonly BaliBotDbContext _db;
-        public MessageRepository(BaliBotDbContext dbContext)
-        {
-            _db = dbContext;
-        }
+        private readonly BaliBotDbContext _db = dbContext;
 
         public List<LeaderboardGrouping> GetLeaderboard(ulong guildID, int maximum = 10)
         {
@@ -35,6 +31,7 @@ namespace BaliBotDotNet.Data
             return rs;
 
         }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "<Pending>")]
         public List<Message> GetAllMessages(ulong guildID, ulong authorID = 0)
         {
             var rs = _db.Messages.Where(x => x.GuildID == guildID);

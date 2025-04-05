@@ -58,9 +58,19 @@ namespace BaliBotDotNet.Modules
         public async Task GetAlternativeFact(int factId = -1)
         {
             var rng = new Random();
+            AlternativeFact fact;
             await DeferAsync();
-            var factList = _alternativeFactRepository.GetFactList(factId);
-            var fact = factList[rng.Next(factList.Count)];
+
+            if (factId == -1)
+            {
+                var factList = _alternativeFactRepository.GetAllFacts();
+                fact = factList[rng.Next(factList.Count)];
+            }
+            else
+            { 
+                fact = _alternativeFactRepository.GetFact(factId);
+            }
+      
             var author = _authorRepository.GetAuthor(fact.AuthorID);
             await FollowupAsync($"Fact #{fact.AlternativeFactID}: {fact.Description} - {author.Username}");
         }
@@ -68,14 +78,17 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("deletefact", "Deletes an alternative fact")]
         public async Task DeleteAlternativeFact(int factId)
         {
-            var rng = new Random();
             await DeferAsync();
-            var factList = _alternativeFactRepository.GetFactList(factId);
-            var fact = factList[rng.Next(factList.Count)];
-            var author = _authorRepository.GetAuthor(fact.AuthorID);
+            var fact = _alternativeFactRepository.GetFact(factId);
 
-            if(fact.AuthorID != Context.User.Id)
+            if (fact == null)
+            {
+                await FollowupAsync($"No such fact exist.");
+            }
+            else if (fact.AuthorID != Context.User.Id)
+            {
                 await FollowupAsync($"A fact can only be deleted by its author.");
+            }
             else
             {
                 _alternativeFactRepository.DeleteFact(factId);
@@ -279,7 +292,9 @@ namespace BaliBotDotNet.Modules
                 var res = Ngrams(size, msg);
                 foreach (var gram in res)
                 {
+#pragma warning disable SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
                     var cleanGram = Regex.Replace(gram, @"\p{Cs}", "");
+#pragma warning restore SYSLIB1045 // Convert to 'GeneratedRegexAttribute'.
                     if (dict.TryGetValue(cleanGram, out int value))
                     {
                         dict[cleanGram] = ++value;

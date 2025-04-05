@@ -11,24 +11,14 @@ using System.Timers;
 
 namespace BaliBotDotNet.Services
 {
-    public class InteractionHandler
+    public class InteractionHandler(DiscordSocketClient client, InteractionService handler, IServiceProvider services, IConfiguration config)
     {
-        private readonly DiscordSocketClient _client;
-        private readonly InteractionService _handler;
-        private readonly IServiceProvider _services;
-        private readonly IConfiguration _configuration;
+        private readonly DiscordSocketClient _client = client;
+        private readonly InteractionService _handler = handler;
+        private readonly IServiceProvider _services = services;
+        private readonly IConfiguration _configuration = config;
 
         public const char Prefix = '$';
-        private readonly Dictionary<ulong, TimerContext> _timerContextByServerID;
-        private const int delay_in_seconds = 30;
-        public InteractionHandler(DiscordSocketClient client, InteractionService handler, IServiceProvider services, IConfiguration config)
-        {
-            _client = client;
-            _handler = handler;
-            _services = services;
-            _configuration = config;
-            _timerContextByServerID = new Dictionary<ulong, TimerContext>();
-        }
 
         public async Task InitializeAsync()
         {

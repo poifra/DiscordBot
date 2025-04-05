@@ -7,13 +7,9 @@ using System.Linq;
 
 namespace BaliBotDotNet.Data
 {
-    public class ReminderRepository : IReminderRepository
+    public class ReminderRepository(BaliBotDbContext dbContext) : IReminderRepository
     {
-        private readonly BaliBotDbContext _db;
-        public ReminderRepository(BaliBotDbContext dbContext)
-        { 
-            _db = dbContext;
-        }
+        private readonly BaliBotDbContext _db = dbContext;
 
         public List<Reminder> CheckForReminders()
         {

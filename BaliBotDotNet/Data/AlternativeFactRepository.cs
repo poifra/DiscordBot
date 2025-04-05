@@ -1,31 +1,17 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
-using Dapper;
-using Discord;
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Data
 {
-    public class AlternativeFactRepository : IAlternativeFactRepository
+    public class AlternativeFactRepository(BaliBotDbContext dbContext) : IAlternativeFactRepository
     {
-        private readonly BaliBotDbContext _db;
-        public AlternativeFactRepository(BaliBotDbContext dbContext)
-        {
-            _db = dbContext;
-        }
+        private readonly BaliBotDbContext _db = dbContext;
 
-        public List<AlternativeFact> GetFactList(int factID = -1)
+        public List<AlternativeFact> GetAllFacts()
         {
             IQueryable<AlternativeFact> rs = _db.AlternativeFacts;
-            if (factID != -1)
-            {
-                rs = rs.Where(x => x.AlternativeFactID == factID);
-            }
             return rs.ToList();
         }
 
@@ -33,7 +19,6 @@ namespace BaliBotDotNet.Data
         {
             _db.AlternativeFacts.Add(new AlternativeFact {Description = description, AuthorID = AuthorID});
             _db.SaveChanges();
-
         }
 
         public void DeleteFact(int factId)
@@ -46,6 +31,12 @@ namespace BaliBotDotNet.Data
             }
 
             _db.SaveChanges();
+        }
+
+        public AlternativeFact GetFact(int factID)
+        {
+            var rs = _db.AlternativeFacts.Find(factID);
+            return rs;
         }
     }
 }

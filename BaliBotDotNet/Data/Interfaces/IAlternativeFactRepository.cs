@@ -1,18 +1,13 @@
 ﻿using BaliBotDotNet.Models;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Data.Interfaces
 {
     public interface IAlternativeFactRepository
     {
-        public List<AlternativeFact> GetFactList(int id);
+        public List<AlternativeFact> GetAllFacts();
+        public AlternativeFact GetFact(int factID);
         public void WriteFact(string description, ulong AuthorID);
-        void DeleteFact(int factId);
-
-
+        public void DeleteFact(int factId);
     }
 }
