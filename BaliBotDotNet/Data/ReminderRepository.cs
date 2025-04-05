@@ -28,17 +28,6 @@ namespace BaliBotDotNet.Data
             {
                 _db.Reminders.Remove(reminder);
             }
-            //var con = SqlCon;
-            //if (con.State != System.Data.ConnectionState.Open)
-            //{
-            //    con.Open();
-            //}
-            //var sqlUpdate = "DELETE FROM Reminder WHERE ReminderID=@ReminderID;";
-            //var updateParameters = new
-            //{
-            //    ReminderID = reminderID,
-            //};
-            //con.Execute(sqlUpdate, updateParameters);
         }
 
         public Reminder GetReminder(int reminderID)
