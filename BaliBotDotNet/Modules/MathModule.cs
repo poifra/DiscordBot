@@ -1,25 +1,29 @@
-﻿using BaliBotDotNet.Utilities.ExtensionMethods;
+﻿using BaliBotDotNet.Services;
+using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord.Commands;
-using System;
+using Discord.Interactions;
 using System.Linq;
 using System.Text;
+using System;
 using System.Threading.Tasks;
 
 namespace BaliBotDotNet.Modules
 {
-    public class MathModule : ModuleBase<SocketCommandContext>
+    public class MathModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly CommandService _service;
+        public InteractionService Commands { get; set; }
 
-        public MathModule(CommandService service)
+        private InteractionHandler _handler;
+
+        public MathModule(InteractionHandler handler)
         {
-            _service = service;
+            _handler = handler;
         }
 
-        [Command("gcd")]
-        [Summary("Returns the GCD of two numbers.")]
+        [SlashCommand("gcd", "Returns the GCD of two numbers.")]
         public async Task GCD(int a, int b)
         {
+            await DeferAsync();
             if (b == 0)
             {
                 await ReplyAsync($"{a}");
@@ -30,22 +34,31 @@ namespace BaliBotDotNet.Modules
             }
         }
 
-        [Command("roll")]
-        [Summary("Rolls a number of occurences of a series of dice. Use dl or dh to drop lowest or highest values of each occurence." +
-            "\nExample usages: " +
-            "\n$roll 5d20" +
-            "\n$roll 4 4d6 dl")]
-        public async Task Roll(string numberOfOccurences = "1", string dice = "1d6", string removeValues = "")
+        public enum RemoveValueChoice
         {
-            if (numberOfOccurences == "stats")
+            DH,
+            DL,
+            None
+        }
+
+        [SlashCommand("roll","Rolls some dice, usage :/roll stats or /roll 5 1d6")]
+        public async Task Roll(bool isRollStats = false, string numberOfOccurences = "1", string dice = "1d6", RemoveValueChoice removeValues = RemoveValueChoice.None)
+        {
+            if (!isRollStats)
             {
-                await Roll("6", "4d6", "dl");
+                await DeferAsync();
+            }
+           
+            if (isRollStats)
+            {
+                await Roll(false, "6", "4d6", RemoveValueChoice.DL);
                 return;
             }
+
             int dIndex = dice.IndexOf('d');
             if (dIndex == -1 || dIndex == 0)
             {
-                await ReplyAsync("No dice");
+                await FollowupAsync("No dice");
                 return;
             }
 
@@ -55,30 +68,29 @@ namespace BaliBotDotNet.Modules
             int occurences = int.TryParse(numberOfOccurences, out occurences) == false ? 1 : occurences;
 
             if (int.TryParse(dice.AsSpan(0, dIndex), out numberOfDice) == false
-                || int.TryParse(dice.AsSpan(dIndex + 1), out diceMax) == false               
+                || int.TryParse(dice.AsSpan(dIndex + 1), out diceMax) == false
                 || numberOfDice <= 0
                 || numberOfDice > 50
                 || diceMax <= 0
                 || occurences < 1
-                || occurences > 10
-                || (removeValues != "dl" && removeValues != "dh" && !removeValues.IsNullOrEmpty()))
+                || occurences > 10)
             {
-                await ReplyAsync("No dice");
+                await FollowupAsync("No dice");
                 return;
             }
             int[][] results = new int[occurences][];
             for (int occ = 0; occ < occurences; occ++)
             {
                 int[] row = new int[numberOfDice];
-                for(int i = 0; i < numberOfDice; i++)
+                for (int i = 0; i < numberOfDice; i++)
                 {
-                    row[i] = rng.Next(1,diceMax+1);
+                    row[i] = rng.Next(1, diceMax + 1);
                 }
-                if (removeValues == "dh")
+                if (removeValues == RemoveValueChoice.DH)
                 {
-                    row = row.OrderBy(x=>x).Take(row.Length-1).ToArray();
+                    row = row.OrderBy(x => x).Take(row.Length - 1).ToArray();
                 }
-                if (removeValues == "dl")
+                if (removeValues == RemoveValueChoice.DL)
                 {
                     row = row.OrderByDescending(x => x).Take(row.Length - 1).ToArray();
                 }
@@ -91,7 +103,7 @@ namespace BaliBotDotNet.Modules
                 sb.AppendLine($"{results[occ].Join(' ')}, sum: {results.GetRow(occ).Sum()}");
             }
 
-            await ReplyAsync(sb.ToString());
+            await FollowupAsync(sb.ToString());
 
         }
     }

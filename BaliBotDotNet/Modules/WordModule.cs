@@ -1,69 +1,114 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
+using BaliBotDotNet.Models;
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
-using Discord.Commands;
+using Discord.Interactions;
+using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using RunMode = Discord.Interactions.RunMode;
 
 namespace BaliBotDotNet.Modules
 {
-    public class WordModule : ModuleBase<SocketCommandContext>
+    public class WordModule(IMessageRepository messageRepository, 
+                            IAuthorRepository authorRepository,
+                            IAlternativeFactRepository alternativeFactRepository) : InteractionModuleBase<SocketInteractionContext>
     {
-        private IMessageRepository _messageRepository;
-        private IAuthorRepository _authorRepository;
-        public WordModule(IMessageRepository messageRepository, IAuthorRepository authorRepository)
-        {
-            _messageRepository = messageRepository;
-            _authorRepository = authorRepository;
-        }
+        private readonly IMessageRepository _messageRepository = messageRepository;
+        private readonly IAuthorRepository _authorRepository = authorRepository;
+        private readonly IAlternativeFactRepository _alternativeFactRepository = alternativeFactRepository;
 
-        [Command("leaderboard")]
-        [Summary("Gets the leaderboard of most active users")]
+        [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
         {
+            await DeferAsync();
             ulong guildID = Context.Guild.Id;
             if (maximum > 20 || maximum < 1)
             {
-                await ReplyAsync("Maximum must be between 1 and 20");
+                await FollowupAsync("Maximum must be between 1 and 20");
+                return;
             }
             var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
-            await ReplyAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.Key} {kvPair.Value}").Join('\n'));
+            await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.User} {kvPair.Count}").Join('\n'));
         }
 
-        [Command("messagecount")]
-        [Summary("Gets the message count of the user who calls the command")]
+        [SlashCommand("socialcredit", "Displays social credit")]
+        public async Task SocialCredit()
+        {
+            Random rng = new();
+            int credit = rng.Next(0, 500);
+            await RespondAsync($"You have {credit} social credits");
+        }
+
+        [SlashCommand("messagecount", "Gets the message count of the user who calls the command")]
         public async Task MessageCountAsync()
         {
+            await DeferAsync();
             ulong authorID = Context.User.Id;
             var leaderboard = _messageRepository.GetAllMessages(Context.Guild.Id, authorID);
-            await ReplyAsync($"You sent {leaderboard.Count} messages.");
+            await FollowupAsync($"You sent {leaderboard.Count} messages.");
         }
 
-        [Command("reload", RunMode = RunMode.Async)]
-        public async Task ReloadAsync()
+        [SlashCommand("alternativefact", "Retrieves an alternative fact")]
+        public async Task GetAlternativeFact(int factId = -1)
         {
-            if (!Context.Message.Author.Username.Equals("Bali"))
+            var rng = new Random();
+            await DeferAsync();
+            var factList = _alternativeFactRepository.GetFactList(factId);
+            var fact = factList[rng.Next(factList.Count)];
+            var author = _authorRepository.GetAuthor(fact.AuthorID);
+            await FollowupAsync($"{fact.Description} -{author.Username}");
+        }
+
+        [SlashCommand("writefact", "Writes an alternative fact")]
+        public async Task WriteFact(string fact)
+        {
+            await DeferAsync();
+            _alternativeFactRepository.WriteFact(fact, Context.User.Id);
+            await FollowupAsync($"Fact written successfully!");
+        }
+
+        [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
+        public async Task ReloadAsync(bool reloadSingleChannel = false)
+        {
+            if (!Context.User.Username.Equals("thebali"))
             {
-                await ReplyAsync($"{MentionUtils.MentionUser(Context.Message.Author.Id)} you can't use that!");
+                await RespondAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
-            await ReplyAsync("Loading....");
+            await DeferAsync(false);
+
+            await FollowupAsync("Loading....");
             const int messageCount = 10_000_000;
             var channels = Context.Guild.TextChannels;
             int numberOfProcessedMessages = 0;
 
-            _messageRepository.DropMessages(Context.Guild.Id);
+            if (reloadSingleChannel)
+            {
+                _messageRepository.DropMessages(Context.Channel.Id);
+            }
+            else
+            {
+                _messageRepository.DropMessages(Context.Guild.Id);
+            }
 
             foreach (var channel in channels)
             {
+                if(reloadSingleChannel && channel.Id != Context.Channel.Id)
+                {
+                    continue;
+                }
                 IEnumerable<IMessage> messages = null;
                 try
                 {
                     messages = await channel.GetMessagesAsync(messageCount).FlattenAsync();
-                    messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$'));
+                    messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$') && !x.ToString().StartsWith("p!c"));
                     _messageRepository.InsertBulkMessage(messages, Context.Guild);
                 }
                 catch (Discord.Net.HttpException)
@@ -72,22 +117,22 @@ namespace BaliBotDotNet.Modules
                 }
                 numberOfProcessedMessages += messages?.Count() ?? 0;
             }
-            await ReplyAsync($"Done loading {numberOfProcessedMessages} messages!");
+            await FollowupAsync($"Done loading {numberOfProcessedMessages} messages!");
         }
 
-        [Command("wordlength", RunMode = RunMode.Async)]
-        [Summary("Finds the most used word with the specified length")]
+        [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]
         public async Task WordLengthAsync(int wordLength = 1)
         {
+            await DeferAsync();
             if (wordLength <= 0)
             {
-                await ReplyAsync("You must specify a minimum length greater than 0.");
+                await FollowupAsync("You must specify a minimum length greater than 0.");
                 return;
             }
 
-            if (Context.Message.Author.Username.Equals("Luneth"))
+            if (Context.User.Username.Equals("Luneth"))
             {
-                await ReplyAsync($"{MentionUtils.MentionUser(Context.Message.Author.Id)} you can't use that!");
+                await FollowupAsync($"{MentionUtils.MentionUser(Context.User.Id)} you can't use that!");
                 return;
             }
 
@@ -95,100 +140,182 @@ namespace BaliBotDotNet.Modules
             var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
             if (string.IsNullOrEmpty(kv.Key))
             {
-                await ReplyAsync($"There are no words that are {wordLength} letters long.");
+                await FollowupAsync($"There are no words that are {wordLength} letters long.");
             }
             else
             {
                 if (MentionUtils.TryParseUser(kv.Key, out ulong mention))
                 {
-                    await ReplyAsync("This would ping someone :(");
+                    await FollowupAsync("This would ping someone :(");
                 }
                 else
                 {
-                    await ReplyAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
+                    await FollowupAsync($"The most common word with {wordLength} letters is \"{kv.Key}\" with {kv.Value} occurences.");
                 }
             }
         }
-        [Command("choose")]
-        [Summary("Picks something in a list. Choices must be separated by a space or by quotes. Usage: $choose <choice1> <choice2>")]
-        public async Task Choose(params string[] choices)
+        [SlashCommand("choose", "Picks something in a list.")]
+        public async Task Choose(string choicesString)
         {
-            Random rng = new Random();
-            Random cringeRNG = new Random();
-            if (cringeRNG.Next(0, 1000) == 420)
+            string[] choices = choicesString.Split(' ');
+            Random rng = new();
+            if (rng.Next(0, 1000) == 420)
             {
-                await ReplyAsync("lol cringe");
+                await RespondAsync("none of the above");
                 return;
             }
             int n = choices.Length;
             if (n == 0)
             {
-                await ReplyAsync("You must specify at least one thing.");
+                await RespondAsync("You must specify at least one thing.");
                 return;
             }
             int pick = rng.Next(0, n);
-            await ReplyAsync(choices[pick]);
+            await RespondAsync(choices[pick]);
         }
 
-        [Command("coinflip")]
-        [Summary("Heads or tails")]
+        [SlashCommand("coinflip", "Heads or tails")]
         public async Task CoinFlip()
         {
             Random rng = new();
             string answer = rng.Next(0, 2) % 2 == 0 ? "heads" : "tails";
-            await ReplyAsync($"{answer}");
+            await RespondAsync($"{answer}");
         }
 
-        [Command("quote")]
-        public async Task Quote()
+        [SlashCommand("quote", "Quotes someone at random, without context", runMode: RunMode.Async)]
+        public async Task Quote(SocketGuildUser user = null)
         {
-            var messageList = _messageRepository.GetAllMessages(Context.Guild.Id);
+            await DeferAsync();
+            var messageList = user == null ? 
+                  _messageRepository.GetAllMessages(Context.Guild.Id) 
+                : _messageRepository.GetAllMessages(Context.Guild.Id,user.Id);
             var rng = new Random();
             var index = rng.Next(messageList.Count);
+
+            if (index <= 0)
+            {
+                await FollowupAsync($"This person either has no messages or doesn't wish to be quoted.");
+                return;
+            }
+
             var message = messageList[index];
             while (message.Content.Contains('@') || message.Content.Equals(""))
             {
-               index =  rng.Next(messageList.Count);
-               message = messageList[index];
+                Console.WriteLine($"Tried to send {message.Content}");
+                index = rng.Next(messageList.Count);
+                message = messageList[index];
             }
             var author = _authorRepository.GetAuthor(message.AuthorID);
-            await ReplyAsync($"{message.Content} -{author.Username}");
+            await FollowupAsync($"{message.Content} -{author.Username}, {message.DateSent:dd MMMM yyyy}");
+            //await Context.Channel.SendMessageAsync($"{message.Content} -{author.Username}, {message.DateSent:dd MMMM yyyy}");
         }
-        [Command("count")]
-        [Summary("Counts the number of occurences of a specified word")]
+
+        [SlashCommand("count", "Counts the number of occurences of a specified word")]
         public async Task WordCountAsync(string word)
         {
+            await DeferAsync();
             if (word.IsNullOrEmpty())
             {
-                await ReplyAsync("You must specify a word to search.");
+                await FollowupAsync("You must specify a word to search.");
             }
             var dict = LoadMessages();
             if (dict.TryGetValue(word, out int count))
             {
-                await ReplyAsync($"The word \"{word}\" has been used {count} time(s).");
+                await FollowupAsync($"The word \"{word}\" has been used {count} time(s).");
             }
             else
             {
-                await ReplyAsync("That word was never used in this server.");
+                await FollowupAsync("That word was never used in this server.");
             }
+        }
+        [SlashCommand("ngram", "Returns a list of n-grams by the user", runMode: RunMode.Async)]
+        public async Task DisplayNGrams(int size = 0)
+        {
+            await DeferAsync();
+            List<string> results = [];
+            var messages = _messageRepository.GetAllMessages(Context.Guild.Id, Context.User.Id);
+
+            if (size != 0)
+            {
+                results.Add(FetchNGram(size, messages));
+            }
+            else
+            {
+                for (int i = 2; i <= 6; i++)
+                {
+                    results.Add($"{i}-grams");
+                    results.Add(FetchNGram(i, messages));
+                    results.Add("\n");
+                }
+            }
+            await FollowupAsync(results.Join('\n'));
+        }
+
+        private string FetchNGram(int size, List<Message> messages)
+        {
+            messages = messages.Where(x => x.Content.Split(" ").Length >= size).ToList();
+            Dictionary<string, int> dict = [];
+            foreach (var message in messages)
+            {
+                var msg = message.Content;
+                var res = Ngrams(size, msg);
+                foreach (var gram in res)
+                {
+                    var cleanGram = Regex.Replace(gram, @"\p{Cs}", "");
+                    if (dict.TryGetValue(cleanGram, out int value))
+                    {
+                        dict[cleanGram] = ++value;
+                    }
+                    else
+                    {
+                        dict[cleanGram] = 1;
+                    }
+                }
+            }
+            dict = dict.Where(x => x.Value >= 5
+                            && !string.IsNullOrWhiteSpace(x.Key)
+                            && x.Key.Trim().Length > 1
+                            && !x.Key.Contains('|')
+                            && !x.Key.Contains('<'))
+                .OrderByDescending(x => x.Value)
+                .Take(5)
+                .ToDictionary(dict => dict.Key, dict => dict.Value);
+            return dict.Select((kvPair, i) => $"{kvPair.Value} {kvPair.Key}").Join('\n');
+        }
+
+        private List<string> Ngrams(int n, string str)
+        {
+            List<string> ngrams = [];
+            string[] words = str.Split(" ");
+            for (int i = 0; i < words.Length - n + 1; i++)
+                ngrams.Add(Concat(words, i, i + n));
+            return ngrams;
+        }
+
+        private static string Concat(string[] words, int start, int end)
+        {
+            StringBuilder sb = new();
+            for (int i = start; i < end; i++)
+                sb.Append((i > start ? " " : "") + words[i]);
+            return sb.ToString();
         }
 
         private Dictionary<string, int> LoadMessages(int wordLength = 0)
         {
             var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
-            Dictionary<string, int> dict = new Dictionary<string, int>();
+            Dictionary<string, int> dict = [];
             foreach (var m in messages)
             {
-                IEnumerable<string> words = m.Content.Split(' ').ToList();
+                IEnumerable<string> words = [.. m.Content.Split(' ')];
                 if (wordLength != 0)
                 {
                     words = words.Where(x => x.Length == wordLength);
                 }
                 foreach (var w in words)
                 {
-                    if (dict.ContainsKey(w))
+                    if (dict.TryGetValue(w, out int value))
                     {
-                        dict[w]++;
+                        dict[w] = ++value;
                     }
                     else
                     {

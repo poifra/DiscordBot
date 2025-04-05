@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -11,18 +13,13 @@ namespace BaliBotDotNet.Services
     public class WebService
     {
         private readonly HttpClient _http;
-        private Dictionary<string, Func<Task<Stream>>> _animals;
         public WebService(HttpClient http)
         {
-            _http = http;
-            _http.Timeout = TimeSpan.FromSeconds(3);
-            _animals = new Dictionary<string, Func<Task<Stream>>>
-            {
-                { "duck", GetDuckPictureAsync }
-            };
+            _http = http; 
+            _http.Timeout = TimeSpan.FromSeconds(10);
         }
 
-        internal async Task<Stream> GetCatPictureAsync(string word = "")
+        internal async Task<(Stream,HttpStatusCode)> GetCatPictureAsync(string word = "")
         {
             try
             {
@@ -30,27 +27,29 @@ namespace BaliBotDotNet.Services
                 if (word.Equals("cute"))
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat/cute");
+                    return (await resp.Content.ReadAsStreamAsync(), resp.StatusCode);
                 }
                 else if (word.Equals("gif"))
                 {
                     resp = await _http.GetAsync("https://cataas.com/cat/gif");
+                    return (await resp.Content.ReadAsStreamAsync(), resp.StatusCode);
                 }
                 else
                 {
-                    resp = await _http.GetAsync("https://cataas.com/cat");
+                    resp = await _http.GetAsync("https://api.thecatapi.com/v1/images/search");
                 }
-                return await resp.Content.ReadAsStreamAsync();
+                if (!resp.IsSuccessStatusCode)
+                {
+                    return (null,resp.StatusCode);
+                }
+                using var document = JsonDocument.Parse(await resp.Content.ReadAsStringAsync());
+                var image = await (await _http.GetAsync(document.RootElement[0].GetProperty("url").GetString())).Content.ReadAsStreamAsync();
+                return (image,resp.StatusCode);
             }
             catch (Exception) //who needs to be specific Kappa
             {
-                return null;
+                return (null,HttpStatusCode.RequestTimeout);
             }
-        }
-
-        internal async Task<string> Get8BallAnswer()
-        {
-            var response = await _http.GetAsync("https://customapi.aidenwallis.co.uk/api/v1/misc/8ball");
-            return await response.Content.ReadAsStringAsync();
         }
 
         internal async Task<Stream> GetDogPictureAsync()
@@ -69,6 +68,16 @@ namespace BaliBotDotNet.Services
             return image;
         }
 
+        internal async Task<LichessContainer> GetLichessPuzzle()
+        {
+            var jsonResponse = await _http.GetAsync("https://lichess.org/api/puzzle/daily");
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            var puzzleID = document.RootElement.GetProperty("puzzle").GetProperty("id");
+            List<string> solution = document.RootElement.GetProperty("puzzle").GetProperty("solution").Deserialize<List<string>>();
+            var image = await _http.GetAsync($"https://lichess1.org/training/export/gif/thumbnail/{puzzleID}.gif");
+            return new LichessContainer { ImageURL=$"https://lichess1.org/training/export/gif/thumbnail/{puzzleID}.gif", Solution = solution };
+        }
+
         internal async Task<Stream> GetFoxPictureAsync()
         {
             var jsonResponse = await _http.GetAsync("https://randomfox.ca/floof/");
@@ -77,28 +86,53 @@ namespace BaliBotDotNet.Services
             return image;
         }
 
-        internal async Task<float?> GetConversionRateAsync(string source, string destination)
+        internal async Task<(HttpStatusCode, float?)> GetConversionRateAsync(string source, string destination)
         {
             using var jsonConfig = JsonDocument.Parse(File.ReadAllText(Environment.CurrentDirectory + "\\config.json"));
             string token = jsonConfig.RootElement.GetProperty("currencyKey").GetString();
 
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             string conversion = $"{source.ToUpper()}_{destination.ToUpper()}";
-            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v5/convert?q={conversion}&compact=y&apiKey={token}");
-            if (!jsonResponse.IsSuccessStatusCode)
+            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v8/convert?q={conversion}&compact=y&apiKey={token}");
+            float? conversionValue = null;
+
+            if (jsonResponse.IsSuccessStatusCode)
             {
-                return null;
-            }
-            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
-            try
-            {
-                return float.Parse(document.RootElement.GetProperty(conversion).GetProperty("val").ToString());
-            }
-            catch (KeyNotFoundException)
-            {
-                return null;
+                try
+                {
+                    using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+                    return (HttpStatusCode.OK, float.Parse(document.RootElement.GetProperty(conversion).GetProperty("val").ToString()));
+                }
+                catch (KeyNotFoundException)
+                {
+                    return (HttpStatusCode.NotAcceptable, null);
+                }
+
             }
 
+            //backup API
+            else
+            {
+                token = jsonConfig.RootElement.GetProperty("currencyKeyBackup").GetString();
+                jsonResponse = await _http.GetAsync($"https://api.currencyapi.com/v3/latest?apikey={token}&base_currency={source.ToUpper()}&currencies={destination.ToUpper()}");
+                if (jsonResponse.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+                        var value = float.Parse(document.RootElement.GetProperty("data")
+                            .GetProperty(destination.ToUpper())
+                            .GetProperty("value").ToString());
+                        return (HttpStatusCode.OK, value);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        return (HttpStatusCode.NotAcceptable, null);
+                    }
+
+                }
+            }
+            return (jsonResponse.StatusCode, conversionValue) ;
         }
 
         internal async Task<XKCDContainer> GetXKCDAsync(int? id, bool getRandom = false)
@@ -144,6 +178,19 @@ namespace BaliBotDotNet.Services
             using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
             return document.RootElement.GetProperty("joke").ToString();
         }
+
+        internal async Task<string> GetFactAsync()
+        {
+            _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            var jsonResponse = await _http.GetAsync("https://uselessfacts.jsph.pl/api/v2/facts/random");
+            if (!jsonResponse.IsSuccessStatusCode)
+            {
+                return null;
+            }
+            using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+            return document.RootElement.GetProperty("text").ToString();
+       
+        }
     }
 
     public class XKCDContainer
@@ -152,5 +199,10 @@ namespace BaliBotDotNet.Services
         public Stream Image { get; set; }
         public string Title { get; set; }
         public string AltText { get; set; }
+    }
+    public class LichessContainer
+    { 
+        public string ImageURL { get; set; }
+        public List<string> Solution { get; set; }
     }
 }

@@ -1,14 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 
-namespace BaliBotDotNet.Models
+namespace BaliBotDotNet.Models;
+
+public class Reminder
 {
-    public class Reminder
-    {
-        public int ReminderID { get; set; }
-        public ulong AuthorID { get; set; }
-        public ulong ChannelID { get; set; }
-        public DateTime ReminderTime { get; set; }
-        public string ReminderText { get; set; }
-        public bool IsReminderDone { get; set; }
-    }
+    public int ReminderID { get; set; }
+
+    public ulong AuthorID { get; set; }
+
+    public ulong ChannelID { get; set; }
+
+    public string ReminderText { get; set; }
+
+    public DateTime ReminderTime { get; set; }
+
+    public int IsReminderDone { get; set; }
 }

@@ -7,71 +7,58 @@ using System.Linq;
 
 namespace BaliBotDotNet.Data
 {
-    public class ReminderRepository : SqlLiteBaseRepository, IReminderRepository
+    public class ReminderRepository : IReminderRepository
     {
-        public ReminderRepository() : base()
-        { }
+        private readonly BaliBotDbContext _db;
+        public ReminderRepository(BaliBotDbContext dbContext)
+        { 
+            _db = dbContext;
+        }
 
         public List<Reminder> CheckForReminders()
         {
-            using var con = SqlCon;
-            con.Open();
-            var sql = "SELECT * FROM Reminder where IsReminderDone=0 AND ReminderTime<DATETIME('now','localtime');";
-            var reminders = con.Query<Reminder>(sql);
-            return reminders.AsList();
+            var rs = _db.Reminders.Where(x => x.IsReminderDone == 0 && x.ReminderTime < DateTime.Now);
+            return rs.ToList();
         }
 
         public void DeleteReminder(int reminderID)
         {
-            using var con = SqlCon;
-            con.Open();
-            var sqlUpdate = "DELETE FROM Reminder WHERE ReminderID=@ReminderID;";
-            var updateParameters = new
+            var reminder = _db.Reminders.FirstOrDefault(x => x.ReminderID == reminderID);
+            if (reminder != null)
             {
-                ReminderID = reminderID,
-            };
-            con.Execute(sqlUpdate, updateParameters);
+                _db.Reminders.Remove(reminder);
+            }
         }
 
         public Reminder GetReminder(int reminderID)
         {
-            using var con = SqlCon;
-            con.Open();
-            var sqlUpdate = "SELECT * FROM Reminder WHERE ReminderID=@ReminderID;";
-            var updateParameters = new
-            {
-                ReminderID = reminderID,
-            };
-            var reminder = con.Query<Reminder>(sqlUpdate, updateParameters).FirstOrDefault();
+            var reminder = _db.Reminders.FirstOrDefault(x => x.ReminderID == reminderID);
             return reminder;
         }
 
         public int InsertReminder(ulong authorID, ulong channelID, DateTime reminderDate, string reminderText)
         {
-            using var con = SqlCon;
-            con.Open();
-            var sqlInsert = "INSERT INTO Reminder (AuthorID, ChannelID, ReminderText, ReminderTime) VALUES (@AuthorID, @ChannelID, @ReminderText, @ReminderTime);";
-            var reminderParameters = new
+            var reminder = new Reminder
             {
                 AuthorID = authorID,
                 ChannelID = channelID,
                 ReminderText = reminderText,
-                ReminderTime = reminderDate.ToString()
+                ReminderTime = reminderDate,
             };
-            con.Execute(sqlInsert, reminderParameters);
-            return con.QueryFirst<int>("SELECT last_insert_rowid();");
+            _db.Reminders.Add(reminder);
+               
+            _db.SaveChanges();
+            return reminder.ReminderID;
         }
 
         public void SetReminderDone(int reminderID)
         {
-            using var con = SqlCon;
-            con.Open();
-            var sqlUpdate = "UPDATE Reminder SET IsReminderDone = 1 WHERE ReminderID=@ReminderID;";
-            var updateParameters = new
+            var reminder = _db.Reminders.FirstOrDefault(x => x.ReminderID == reminderID);
+            if (reminder != null)
             {
-                ReminderID = reminderID,
-            };
-            con.Execute(sqlUpdate, updateParameters);
+                reminder.IsReminderDone = 1;
+            }
+            _db.SaveChanges();
 
         }
     }

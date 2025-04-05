@@ -1,44 +1,52 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Services;
-using Discord.Commands;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
-
+using Discord.Interactions;
+using Discord;
 namespace BaliBotDotNet.Modules
 {
-    public class WebModule : ModuleBase<SocketCommandContext>
+    public class WebModule(IMessageRepository messageRepository) : InteractionModuleBase<SocketInteractionContext>
     {
         // Dependency Injection will fill these values in for us
         public WebService WebService { get; set; }
-        public IMessageRepository _messageRepository { get; set; }
+        public IMessageRepository MessageRepository { get; set; } = messageRepository;
 
-        public WebModule(IMessageRepository messageRepository)
-        {
-            _messageRepository = messageRepository;
-        }
-
-        [Command("convertcurrency")]
-        [Summary("Converts from currency A to currency B. Example usage : `$convertcurrency 100 eur cad.`")]
+        [SlashCommand("convertcurrency", "Converts from currency A to currency B.")]
         public async Task ConvertAsync(float amount, string source, string destination)
         {
-            var rate = await WebService.GetConversionRateAsync(source, destination);
-            if (rate == null)
+            var (status, rate) = await WebService.GetConversionRateAsync(source, destination);
+
+            switch (status)
             {
-                await Context.Channel.SendMessageAsync("Invalid currency");
-            }
-            else
-            {
-                await Context.Channel.SendMessageAsync($"{amount} {source} is {string.Format("{0:0.00}", (amount*rate))} {destination}");
-            }
+                default:
+                    await RespondAsync($"{amount} {source} is {string.Format("{0:0.00}", (amount * rate))} {destination}");
+                break;
+
+                case HttpStatusCode.BadRequest:
+                    await RespondAsync("Key needs an update.");
+                break;
+
+                case HttpStatusCode.NotAcceptable:
+                    await RespondAsync("Invalid currency.");
+                break;
+
+                case HttpStatusCode.RequestTimeout:
+                case HttpStatusCode.ServiceUnavailable:
+                    await RespondAsync("API is kill.");
+                break;
+            } 
         }
 
-        [Command("8ball")]
-        public async Task EightBall(params string[] question)
+        [SlashCommand("8ball", "Predicts the future")]
+        public async Task EightBall(string question="")
         {
             var random = new Random();
-            List<string> answers = new List<string>{
+            List<string> answers =
+            [
                 "It is certain",
                 "It is decidedly so",
                 "Without a doubt",
@@ -61,88 +69,113 @@ namespace BaliBotDotNet.Modules
                 "My reply is no",
                 "My sources say no",
                 "Outlook not so good",
-                "Very doubtful"};
-            await ReplyAsync(answers[random.Next(answers.Count)]);
+                "Very doubtful"
+            ];
+            await RespondAsync(answers[random.Next(answers.Count)]);
         }
 
-        [Command("cat")]
-        [Summary("Gets a cat picture. You can use `$cat gif` to get a gif or `$cat cute` to get a cute cat. Any other words are ignored.")]
+        [SlashCommand("cat", "Gets a cat picture.")]
         public async Task CatAsync(string word = "")
         {
-            var stream = await WebService.GetCatPictureAsync(word);
-            if (stream == null)
+            await DeferAsync();
+            var tuple = await WebService.GetCatPictureAsync(word);
+            Stream stream = tuple.Item1;
+            HttpStatusCode statusCode = tuple.Item2;
+            if (stream == null && statusCode == HttpStatusCode.RequestTimeout)
             {
-                await Context.Channel.SendMessageAsync("Cat API timed out :(");
+                await FollowupAsync("Cat API timed out :(");
                 return;
             }
+
+            if (!statusCode.HasFlag(HttpStatusCode.OK))
+            {
+                await FollowupAsync($"Api returned {((int)statusCode)} {statusCode}");
+                return;
+            }
+
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
             if (word.Equals("gif"))
             {
-                await Context.Channel.SendFileAsync(stream, "cat.gif");
+                await FollowupWithFileAsync(stream, "cat.gif");
             }
             else
             {
-                await Context.Channel.SendFileAsync(stream, "cat.png");
+                await FollowupWithFileAsync(stream, "cat.png");
             }
         }
 
-        [Command("dog")]
-        [Summary("Gets a dog picture.")]
+        [SlashCommand("dog", "Gets a dog picture.")]
         public async Task DogAsync()
         {
+            await DeferAsync();
             var stream = await WebService.GetDogPictureAsync();
             if (stream == null)
             {
-                await Context.Channel.SendMessageAsync("Dog API timed out :(");
+                await FollowupAsync("Dog API timed out :(");
                 return;
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "dog.png");
+            await FollowupWithFileAsync(stream, "dog.png");
         }
 
 
-        [Command("duck")]
-        [Summary("Gets a duck picture.")]
+        [SlashCommand("duck", "Gets a duck picture.")]
         public async Task DuckAsync()
         {
+            await DeferAsync();
             var stream = await WebService.GetDuckPictureAsync();
             if (stream == null)
             {
-                await Context.Channel.SendMessageAsync("Duck API timed out :(");
+                await RespondAsync("Duck API timed out :(");
                 return;
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "duck.png");
+            await FollowupWithFileAsync(stream, "duck.png");
         }
 
 
-        [Command("fox")]
-        [Summary("Gets a fox picture.")]
+        [SlashCommand("fox", "Gets a fox picture.")]
         public async Task FoxAsync()
         {
+            await DeferAsync();
             var stream = await WebService.GetFoxPictureAsync();
             if (stream == null)
             {
-                await Context.Channel.SendMessageAsync("Fox API timed out :(");
+                await RespondAsync("Fox API timed out :(");
                 return;
             }
             // Streams must be seeked to beginning before being uploaded!
             stream.Seek(0, SeekOrigin.Begin);
-            await Context.Channel.SendFileAsync(stream, "fox.png");
+            await FollowupWithFileAsync(stream, "fox.png");
         }
 
-        [Command("dadjoke")]
+        [SlashCommand("dadjoke", "Gets a dad joke")]
         public async Task DadJokeAsync()
         {
             string joke = await WebService.GetDadJokeAsync();
-            await ReplyAsync(joke);
+            await RespondAsync(joke);
         }
 
-        [Command("xkcd")]
-        [Summary("Gets a random XKCD comic, or a specific one if an ID is specificed. Can also fetch the last comic if  \"last\" or \"latest\" is specified as ID.")]
+        [SlashCommand("fact", "Gets a fact")]
+        public async Task FactAsync()
+        {
+            string fact = await WebService.GetFactAsync();
+            await RespondAsync(fact);
+        }
+
+        [SlashCommandAttribute("lichesspuzzle","Gets the daily lichess puzzle")]
+        public async Task GetLichessPuzzle()
+        {
+            var puzzle = await WebService.GetLichessPuzzle();
+            var embed = new EmbedBuilder().WithImageUrl(puzzle.ImageURL).Build();
+
+            await RespondAsync("Daily puzzle", [embed], false, false);
+        }
+
+        [SlashCommand("xkcd", "Gets an XKCD comic.")]
         public async Task XKCDAsync(string xkcdID = null)
         {
             XKCDContainer container;
@@ -157,7 +190,7 @@ namespace BaliBotDotNet.Modules
             }
             else if (!int.TryParse(xkcdID, out int id) || id < 1)
             {
-                await Context.Channel.SendMessageAsync($"{xkcdID} is not a valid XKCD comic ID.");
+                await RespondAsync($"{xkcdID} is not a valid XKCD comic ID.");
                 return;
             }
             else
@@ -167,13 +200,13 @@ namespace BaliBotDotNet.Modules
 
             if (container == null)
             {
-                await Context.Channel.SendMessageAsync($"There is no comic matching id {xkcdID}");
+                await RespondAsync($"There is no comic matching id {xkcdID}");
             }
             else
             {
                 // Streams must be seeked to beginning before being uploaded!
                 container.Image.Seek(0, SeekOrigin.Begin);
-                await Context.Channel.SendMessageAsync("#" + container.ID + ": " + container.Title);
+                await RespondAsync("#" + container.ID + ": " + container.Title);
                 await Context.Channel.SendFileAsync(container.Image, "xkcd.png");
                 await Context.Channel.SendMessageAsync("Alt text: " + container.AltText);
             }
