@@ -12,10 +12,7 @@ namespace BaliBotDotNet.Data
         {
             get
             {
-                if (_connection == null)
-                {
-                    _connection = new SqliteConnection("Data Source=" + DbFile);
-                }
+                _connection ??= new SqliteConnection("Data Source=" + DbFile);
                 return _connection;
             }
         }
@@ -26,12 +23,9 @@ namespace BaliBotDotNet.Data
 
         internal SqlLiteBaseRepository()
         {
-            if (!File.Exists(DbFile))
-            {
-                CreateDatabase();
-            }
+            ValidateDatabaseStructure();
         }
-        private static void CreateDatabase()
+        private static void ValidateDatabaseStructure()
         {
             var con = SqlCon;
             if (con.State != System.Data.ConnectionState.Open)
@@ -39,13 +33,13 @@ namespace BaliBotDotNet.Data
                 con.Open();
             }
             con.Execute(@"
-                    create table Author(
+                    create table if not exists Author(
                     AuthorID integer primary key,
                     Username text not null,
                     IsQuotable bit not null default 1)");
 
             con.Execute(@"
-                    create table Message(                    
+                    create table if not exists Message(                    
                     MessageID integer primary key,
                     AuthorID integer not null,
                     GuildID integer not null,
@@ -54,14 +48,19 @@ namespace BaliBotDotNet.Data
                     foreign key(AuthorID) references Author(AuthorID));");
 
             con.Execute(@"
-                   create table Reminder(
-                   ReminderID integer primary key,
-                   AuthorID integer not null,
-                   ChannelID integer not null,
-                   ReminderText text not null,
-                   ReminderTime text not null,
-                   IsReminderDone integer not null default 0);
-            ");
+                    create table if not exists Reminder(
+                    ReminderID integer primary key,
+                    AuthorID integer not null,
+                    ChannelID integer not null,
+                    ReminderText text not null,
+                    ReminderTime text not null,
+                    IsReminderDone integer not null default 0);");
+
+            con.Execute(@"create table if not exists AlternativeFact(
+                    AlternativeFactId integer primary key,
+                    Description text not null,
+                    AuthorID integer not null,
+                    foreign key(AuthorID) references Author(AuthorID));");
         }
     }
 }

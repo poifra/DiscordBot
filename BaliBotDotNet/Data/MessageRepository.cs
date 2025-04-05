@@ -81,10 +81,7 @@ namespace BaliBotDotNet.Model
 
         public void InsertMessage(IMessage discordMessage, SocketGuild guild, SqliteConnection con = null)
         {
-            if (con == null)
-            {
-                con = SqlCon;
-            }
+            con ??= SqlCon;
             var sqlMessage = "INSERT OR IGNORE INTO Message (MessageID, AuthorID, GuildID, Content, DateSent) VALUES (@MessageID, @AuthorID, @GuildID, @Content, @Date)";
             var sqlAuthor = "INSERT OR IGNORE INTO Author (AuthorID, Username) VALUES (@AuthorID, @Username)";
             var messageParameters = new

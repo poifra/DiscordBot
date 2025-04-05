@@ -69,7 +69,7 @@ namespace BaliBotDotNet.Services
             // Since Global Commands take around 1 hour to register, we should use a test guild to instantly update and test our commands.
             if (Program.IsDebug())
             {
-                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testGuild"]),true);
+                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testguild"]),true);
                 await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["ragnacord"]),true);
             }
             else
@@ -95,40 +95,6 @@ namespace BaliBotDotNet.Services
                     await message.Channel.SendMessageAsync($"Hi {name}! I'm BaliBot!");
                 }
             }
-
-            //Discord.Interactions.IResult result;
-            //var context = Context.;
-            //if (context.Channel.GetChannelType() == ChannelType.DM) //no need for a cooldown in DMs
-            //{
-            //    result = await _handler.ExecuteCommandAsync(context, _services);
-            //    return;
-            //}
-
-            //ulong serverID = context.Guild.Id;
-
-            //if (!_timerContextByServerID.ContainsKey(serverID))
-            //{
-            //    var timerInstance = new TimerContext { CanUseCommand = true, ServerID = serverID, Interval = delay_in_seconds * 1000 };
-            //    timerInstance.Elapsed += ResetLimit;
-            //    _timerContextByServerID[serverID] = timerInstance;
-            //}
-
-            //bool isDebug = false;
-            //if (!_timerContextByServerID[serverID].CanUseCommand && !isDebug) // always execute commands if isDebug is set to true
-            //{
-            //    var dm = await context.User.CreateDMChannelAsync();
-            //    double timeRemaining = (delay_in_seconds - (DateTime.Now - _timerContextByServerID[serverID].StartTime).TotalSeconds);
-            //    await dm.SendMessageAsync($"The bot is on cooldown! Please wait {string.Format("{0:0.00}", timeRemaining)} seconds before using a command.");
-            //    return;
-            //}
-
-            //result = await _handler.ExecuteCommandAsync(context, _services);
-            //if (result.IsSuccess)
-            //{
-            //    _timerContextByServerID[serverID].Start();
-            //    _timerContextByServerID[serverID].CanUseCommand = false;
-            //    _timerContextByServerID[serverID].StartTime = DateTime.Now;
-            //}
         }
 
         private void ResetLimit(object sender, ElapsedEventArgs e)

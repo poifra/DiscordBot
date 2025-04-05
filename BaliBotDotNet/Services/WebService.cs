@@ -75,7 +75,7 @@ namespace BaliBotDotNet.Services
             var puzzleID = document.RootElement.GetProperty("puzzle").GetProperty("id");
             List<string> solution = document.RootElement.GetProperty("puzzle").GetProperty("solution").Deserialize<List<string>>();
             var image = await _http.GetAsync($"https://lichess1.org/training/export/gif/thumbnail/{puzzleID}.gif");
-            return new LichessContainer { Image = await image.Content.ReadAsStreamAsync(), Solution = solution };
+            return new LichessContainer { ImageURL=$"https://lichess1.org/training/export/gif/thumbnail/{puzzleID}.gif", Solution = solution };
         }
 
         internal async Task<Stream> GetFoxPictureAsync()
@@ -93,7 +93,7 @@ namespace BaliBotDotNet.Services
 
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             string conversion = $"{source.ToUpper()}_{destination.ToUpper()}";
-            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v7/convert?q={conversion}&compact=y&apiKey={token}");
+            var jsonResponse = await _http.GetAsync($"https://free.currconv.com/api/v8/convert?q={conversion}&compact=y&apiKey={token}");
             float? conversionValue = null;
 
             if (jsonResponse.IsSuccessStatusCode)
@@ -108,6 +108,29 @@ namespace BaliBotDotNet.Services
                     return (HttpStatusCode.NotAcceptable, null);
                 }
 
+            }
+
+            //backup API
+            else
+            {
+                token = jsonConfig.RootElement.GetProperty("currencyKeyBackup").GetString();
+                jsonResponse = await _http.GetAsync($"https://api.currencyapi.com/v3/latest?apikey={token}&base_currency={source.ToUpper()}&currencies={destination.ToUpper()}");
+                if (jsonResponse.IsSuccessStatusCode)
+                {
+                    try
+                    {
+                        using var document = JsonDocument.Parse(await jsonResponse.Content.ReadAsStringAsync());
+                        var value = float.Parse(document.RootElement.GetProperty("data")
+                            .GetProperty(destination.ToUpper())
+                            .GetProperty("value").ToString());
+                        return (HttpStatusCode.OK, value);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        return (HttpStatusCode.NotAcceptable, null);
+                    }
+
+                }
             }
             return (jsonResponse.StatusCode, conversionValue) ;
         }
@@ -179,7 +202,7 @@ namespace BaliBotDotNet.Services
     }
     public class LichessContainer
     { 
-        public Stream Image { get; set; }
+        public string ImageURL { get; set; }
         public List<string> Solution { get; set; }
     }
 }

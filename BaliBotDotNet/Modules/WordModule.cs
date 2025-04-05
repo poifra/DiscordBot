@@ -16,10 +16,13 @@ using RunMode = Discord.Interactions.RunMode;
 
 namespace BaliBotDotNet.Modules
 {
-    public class WordModule(IMessageRepository messageRepository, IAuthorRepository authorRepository) : InteractionModuleBase<SocketInteractionContext>
+    public class WordModule(IMessageRepository messageRepository, 
+                            IAuthorRepository authorRepository,
+                            IAlternativeFactRepository alternativeFactRepository) : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly IAuthorRepository _authorRepository = authorRepository;
+        private readonly IAlternativeFactRepository _alternativeFactRepository = alternativeFactRepository;
 
         [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
@@ -50,6 +53,25 @@ namespace BaliBotDotNet.Modules
             ulong authorID = Context.User.Id;
             var leaderboard = _messageRepository.GetAllMessages(Context.Guild.Id, authorID);
             await FollowupAsync($"You sent {leaderboard.Count} messages.");
+        }
+
+        [SlashCommand("alternativefact", "Retrieves an alternative fact")]
+        public async Task GetAlternativeFact(int factId = -1)
+        {
+            var rng = new Random();
+            await DeferAsync();
+            var factList = _alternativeFactRepository.GetFactList(factId);
+            var fact = factList[rng.Next(factList.Count)];
+            var author = _authorRepository.GetAuthor(fact.AuthorID);
+            await FollowupAsync($"{fact.Description} -{author.Username}");
+        }
+
+        [SlashCommand("writefact", "Writes an alternative fact")]
+        public async Task WriteFact(string fact)
+        {
+            await DeferAsync();
+            _alternativeFactRepository.WriteFact(fact, Context.User.Id);
+            await FollowupAsync($"Fact written successfully!");
         }
 
         [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
@@ -140,7 +162,7 @@ namespace BaliBotDotNet.Modules
             Random rng = new();
             if (rng.Next(0, 1000) == 420)
             {
-                await RespondAsync("lol cringe");
+                await RespondAsync("none of the above");
                 return;
             }
             int n = choices.Length;

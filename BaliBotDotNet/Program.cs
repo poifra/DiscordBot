@@ -51,6 +51,7 @@ namespace BaliBotDotNet
                 .AddSingleton<IMessageRepository, MessageRepository>()
                 .AddSingleton<IReminderRepository, ReminderRepository>()
                 .AddSingleton<IAuthorRepository, AuthorRepository>()
+                .AddSingleton<IAlternativeFactRepository, AlternativeFactRepository>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
             _messageRepository = new MessageRepository();

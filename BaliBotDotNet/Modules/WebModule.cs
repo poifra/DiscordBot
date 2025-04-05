@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 using Discord.Interactions;
+using Discord;
 namespace BaliBotDotNet.Modules
 {
     public class WebModule(IMessageRepository messageRepository) : InteractionModuleBase<SocketInteractionContext>
@@ -34,7 +35,8 @@ namespace BaliBotDotNet.Modules
                 break;
 
                 case HttpStatusCode.RequestTimeout:
-                    await RespondAsync("API Down?");
+                case HttpStatusCode.ServiceUnavailable:
+                    await RespondAsync("API is kill.");
                 break;
             } 
         }
@@ -162,6 +164,15 @@ namespace BaliBotDotNet.Modules
         {
             string fact = await WebService.GetFactAsync();
             await RespondAsync(fact);
+        }
+
+        [SlashCommandAttribute("lichesspuzzle","Gets the daily lichess puzzle")]
+        public async Task GetLichessPuzzle()
+        {
+            var puzzle = await WebService.GetLichessPuzzle();
+            var embed = new EmbedBuilder().WithImageUrl(puzzle.ImageURL).Build();
+
+            await RespondAsync("Daily puzzle", [embed], false, false);
         }
 
         [SlashCommand("xkcd", "Gets an XKCD comic.")]
