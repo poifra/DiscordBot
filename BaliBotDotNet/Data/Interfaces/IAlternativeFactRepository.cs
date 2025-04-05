@@ -11,6 +11,8 @@ namespace BaliBotDotNet.Data.Interfaces
     {
         public List<AlternativeFact> GetFactList(int id);
         public void WriteFact(string description, ulong AuthorID);
+        void DeleteFact(int factId);
+
 
     }
 }

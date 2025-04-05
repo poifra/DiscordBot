@@ -18,6 +18,7 @@ namespace BaliBotDotNet.Data
         {
             _db = dbContext;
         }
+
         public List<AlternativeFact> GetFactList(int factID = -1)
         {
             IQueryable<AlternativeFact> rs = _db.AlternativeFacts;
@@ -33,6 +34,18 @@ namespace BaliBotDotNet.Data
             _db.AlternativeFacts.Add(new AlternativeFact {Description = description, AuthorID = AuthorID});
             _db.SaveChanges();
 
+        }
+
+        public void DeleteFact(int factId)
+        {
+            var fact = _db.AlternativeFacts.Find(factId);
+
+            if (fact != null)
+            {
+                _db.AlternativeFacts.Remove(fact);
+            }
+
+            _db.SaveChanges();
         }
     }
 }
