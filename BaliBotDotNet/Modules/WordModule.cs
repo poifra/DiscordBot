@@ -62,7 +62,25 @@ namespace BaliBotDotNet.Modules
             var factList = _alternativeFactRepository.GetFactList(factId);
             var fact = factList[rng.Next(factList.Count)];
             var author = _authorRepository.GetAuthor(fact.AuthorID);
-            await FollowupAsync($"{fact.Description} -{author.Username}");
+            await FollowupAsync($"Fact #{fact.AlternativeFactID}: {fact.Description} - {author.Username}");
+        }
+
+        [SlashCommand("deletefact", "Deletes an alternative fact")]
+        public async Task DeleteAlternativeFact(int factId)
+        {
+            var rng = new Random();
+            await DeferAsync();
+            var factList = _alternativeFactRepository.GetFactList(factId);
+            var fact = factList[rng.Next(factList.Count)];
+            var author = _authorRepository.GetAuthor(fact.AuthorID);
+
+            if(fact.AuthorID != Context.User.Id)
+                await FollowupAsync($"A fact can only be deleted by its author.");
+            else
+            {
+                _alternativeFactRepository.DeleteFact(factId);
+                await FollowupAsync($"Fact #{fact.AlternativeFactID} successfully deleted");
+            }
         }
 
         [SlashCommand("writefact", "Writes an alternative fact")]
