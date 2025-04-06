@@ -70,7 +70,13 @@ namespace BaliBotDotNet.Modules
             { 
                 fact = _alternativeFactRepository.GetFact(factId);
             }
-      
+
+            if (fact == null)
+            {
+                await FollowupAsync($"No such fact exist.");
+                return;
+            }
+
             var author = _authorRepository.GetAuthor(fact.AuthorID);
             await FollowupAsync($"Fact #{fact.AlternativeFactID}: {fact.Description} - {author.Username}");
         }
