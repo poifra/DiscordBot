@@ -16,6 +16,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 using BaliBotDotNet.Models;
+using BaliBotDotNet.Utilities;
+using BaliBotDotNet.Utilities.Interfaces;
 
 namespace BaliBotDotNet
 {
@@ -53,6 +55,7 @@ namespace BaliBotDotNet
                 .AddSingleton<IReminderRepository, ReminderRepository>()
                 .AddSingleton<IAuthorRepository, AuthorRepository>()
                 .AddSingleton<IAlternativeFactRepository, AlternativeFactRepository>()
+                .AddSingleton<IAlternativeFactCooldownHandler, AlternativeFactCooldownHandler>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
             _messageRepository = new MessageRepository(new BaliBotDbContext());
