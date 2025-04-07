@@ -1,5 +1,7 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
+using BaliBotDotNet.Utilities;
+using BaliBotDotNet.Utilities.Interfaces;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -13,6 +15,12 @@ namespace BaliBotDotNet.Data
         {
             IQueryable<AlternativeFact> rs = _db.AlternativeFacts;
             return rs.ToList();
+        }
+
+        public List<AlternativeFact> GetAllFacts(List<int> factsToIgnore)
+        {
+            return _db.AlternativeFacts.Where(pFact => !factsToIgnore.Contains(pFact.AlternativeFactID))
+                                       .ToList();
         }
 
         public void WriteFact(string description, ulong AuthorID)

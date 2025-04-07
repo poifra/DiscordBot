@@ -1,12 +1,12 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
 using BaliBotDotNet.Utilities.ExtensionMethods;
+using BaliBotDotNet.Utilities.Interfaces;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -17,11 +17,13 @@ namespace BaliBotDotNet.Modules
 {
     public class WordModule(IMessageRepository messageRepository, 
                             IAuthorRepository authorRepository,
-                            IAlternativeFactRepository alternativeFactRepository) : InteractionModuleBase<SocketInteractionContext>
+                            IAlternativeFactRepository alternativeFactRepository,
+                            IAlternativeFactCooldownHandler alternativeFactCooldownHandler) : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly IAuthorRepository _authorRepository = authorRepository;
         private readonly IAlternativeFactRepository _alternativeFactRepository = alternativeFactRepository;
+        private readonly IAlternativeFactCooldownHandler _alternativeFactCooldownHandler = alternativeFactCooldownHandler;
 
         [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
@@ -63,8 +65,10 @@ namespace BaliBotDotNet.Modules
 
             if (factId == -1)
             {
-                var factList = _alternativeFactRepository.GetAllFacts();
+                var factList = _alternativeFactRepository.GetAllFacts(_alternativeFactCooldownHandler.FactsOnCooldown);
                 fact = factList[rng.Next(factList.Count)];
+
+                _alternativeFactCooldownHandler.Add(fact);
             }
             else
             { 
