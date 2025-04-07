@@ -34,13 +34,13 @@ namespace BalibotTest.MeasurementResolving
         public static void GenerateAvailableMeasurementsList()
         {
             AvailableMeasurementNames = new List<string>();
-            foreach (var conversionValue in ConversionValues)
+            foreach (var (first, second, conversionRate, offset, canBeNegative) in ConversionValues)
             {
-                foreach (var name in conversionValue.first.Split(','))
+                foreach (var name in first.Split(','))
                 {
                     AvailableMeasurementNames.Add(name);
                 }
-                foreach (var name in conversionValue.second.Split(','))
+                foreach (var name in second.Split(','))
                 {
                     AvailableMeasurementNames.Add(name);
                 }

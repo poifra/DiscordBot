@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 
 namespace BaliBotDotNet.Models;
@@ -27,6 +28,7 @@ public partial class BaliBotDbContext : DbContext
     {
         string connectionString = "Data Source="+Environment.CurrentDirectory + "\\BaliBotDB.sqlite";
         optionsBuilder.UseSqlite(connectionString);
+        optionsBuilder.LogTo(message=>Debug.WriteLine(message));
     }
      
 
