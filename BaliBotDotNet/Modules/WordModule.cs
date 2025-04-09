@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -106,6 +107,11 @@ namespace BaliBotDotNet.Modules
         public async Task WriteFact(string fact)
         {
             await DeferAsync();
+            if (fact.Length > 200)
+            {
+                await FollowupAsync("Please write facts that have maximum 200 characters");
+                return;
+            }
             _alternativeFactRepository.WriteFact(fact, Context.User.Id);
             await FollowupAsync($"Fact written successfully!");
         }
@@ -243,8 +249,7 @@ namespace BaliBotDotNet.Modules
                 message = messageList[index];
             }
             var author = _authorRepository.GetAuthor(message.AuthorID);
-            await FollowupAsync($"{message.Content} -{author.Username}, {message.DateSent:dd MMMM yyyy}");
-            //await Context.Channel.SendMessageAsync($"{message.Content} -{author.Username}, {message.DateSent:dd MMMM yyyy}");
+            await FollowupAsync($"{message.Content} -{author.Username}, {DateTime.Parse(message.DateSent):dd MMMM yyyy}");
         }
 
         [SlashCommand("count", "Counts the number of occurences of a specified word")]

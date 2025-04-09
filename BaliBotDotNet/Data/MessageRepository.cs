@@ -4,6 +4,7 @@ using Dapper;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -31,15 +32,14 @@ namespace BaliBotDotNet.Data
             return rs;
 
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0305:Simplify collection initialization", Justification = "<Pending>")]
         public List<Message> GetAllMessages(ulong guildID, ulong authorID = 0)
         {
-            var rs = _db.Messages.Where(x => x.GuildID == guildID);
+            var rs = _db.Messages.AsNoTracking().Where(x => x.GuildID == guildID && x.Author.IsQuotable);
             if (authorID != 0)
             {
                 rs = rs.Where(x => x.AuthorID == authorID);
             }
-            return rs.ToList();
+            return [.. rs];
         }
 
         public void InsertBulkMessage(IEnumerable<IMessage> messages, SocketGuild guild)
