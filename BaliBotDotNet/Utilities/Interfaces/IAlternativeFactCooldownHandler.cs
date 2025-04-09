@@ -10,7 +10,6 @@ namespace BaliBotDotNet.Utilities.Interfaces
     public interface IAlternativeFactCooldownHandler
     {
         List<int> FactsOnCooldown { get; }
-
         void Add(AlternativeFact fact);
     }
 }

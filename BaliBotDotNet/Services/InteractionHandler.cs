@@ -149,7 +149,7 @@ namespace BaliBotDotNet.Services
             }
         }
 
-        private string GetLotteryMessage(string userName)
+        private static string GetLotteryMessage(string userName)
         {
             var sb = new StringBuilder();
             var random = new Random();

@@ -5,9 +5,7 @@ namespace BaliBotDotNet.Data.Interfaces
 {
     public interface IAlternativeFactRepository
     {
-        public List<AlternativeFact> GetAllFacts();
-        List<AlternativeFact> GetAllFacts(List<int> factsToIgnore);
-
+        public AlternativeFact GetRandomFact();
         public AlternativeFact GetFact(int factID);
         public void WriteFact(string description, ulong AuthorID);
         public void DeleteFact(int factId);

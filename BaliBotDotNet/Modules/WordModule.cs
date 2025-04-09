@@ -17,13 +17,11 @@ namespace BaliBotDotNet.Modules
 {
     public class WordModule(IMessageRepository messageRepository, 
                             IAuthorRepository authorRepository,
-                            IAlternativeFactRepository alternativeFactRepository,
-                            IAlternativeFactCooldownHandler alternativeFactCooldownHandler) : InteractionModuleBase<SocketInteractionContext>
+                            IAlternativeFactRepository alternativeFactRepository) : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IMessageRepository _messageRepository = messageRepository;
         private readonly IAuthorRepository _authorRepository = authorRepository;
         private readonly IAlternativeFactRepository _alternativeFactRepository = alternativeFactRepository;
-        private readonly IAlternativeFactCooldownHandler _alternativeFactCooldownHandler = alternativeFactCooldownHandler;
 
         [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
@@ -59,21 +57,13 @@ namespace BaliBotDotNet.Modules
         [SlashCommand("alternativefact", "Retrieves an alternative fact")]
         public async Task GetAlternativeFact(int factId = -1)
         {
-            var rng = new Random();
             AlternativeFact fact;
             await DeferAsync();
 
-            if (factId == -1)
-            {
-                var factList = _alternativeFactRepository.GetAllFacts(_alternativeFactCooldownHandler.FactsOnCooldown);
-                fact = factList[rng.Next(factList.Count)];
-
-                _alternativeFactCooldownHandler.Add(fact);
-            }
-            else
-            { 
-                fact = _alternativeFactRepository.GetFact(factId);
-            }
+            fact = 
+                factId == -1 ? 
+                    _alternativeFactRepository.GetRandomFact():
+                    _alternativeFactRepository.GetFact(factId);
 
             if (fact == null)
             {

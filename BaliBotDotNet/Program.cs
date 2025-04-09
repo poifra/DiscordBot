@@ -10,9 +10,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.IO;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 using BaliBotDotNet.Models;
@@ -50,12 +48,12 @@ namespace BaliBotDotNet
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
-                .AddDbContext<BaliBotDbContext>()
+                .AddDbContext<BaliBotDbContext>() 
+                .AddScoped<IAlternativeFactCooldownHandler, AlternativeFactCooldownHandler>()
                 .AddSingleton<IMessageRepository, MessageRepository>()
                 .AddSingleton<IReminderRepository, ReminderRepository>()
                 .AddSingleton<IAuthorRepository, AuthorRepository>()
                 .AddSingleton<IAlternativeFactRepository, AlternativeFactRepository>()
-                .AddSingleton<IAlternativeFactCooldownHandler, AlternativeFactCooldownHandler>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
             _messageRepository = new MessageRepository(new BaliBotDbContext());

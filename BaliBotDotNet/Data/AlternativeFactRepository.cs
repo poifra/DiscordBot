@@ -1,26 +1,26 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
-using BaliBotDotNet.Utilities;
 using BaliBotDotNet.Utilities.Interfaces;
-using System.Collections.Generic;
+using System;
 using System.Linq;
 
 namespace BaliBotDotNet.Data
 {
-    public class AlternativeFactRepository(BaliBotDbContext dbContext) : IAlternativeFactRepository
+    public class AlternativeFactRepository(BaliBotDbContext dbContext, IAlternativeFactCooldownHandler timerHandler) : IAlternativeFactRepository
     {
         private readonly BaliBotDbContext _db = dbContext;
+        private readonly IAlternativeFactCooldownHandler _timerHandler = timerHandler;
 
-        public List<AlternativeFact> GetAllFacts()
+        public AlternativeFact GetRandomFact()
         {
-            IQueryable<AlternativeFact> rs = _db.AlternativeFacts;
-            return rs.ToList();
-        }
+            var factsToIgnore = _timerHandler.FactsOnCooldown;
+            var rng = new Random();
+            var possibleFacts = _db.AlternativeFacts.Where(x => !factsToIgnore.Contains(x.AlternativeFactID)).ToList();
+            var fact = possibleFacts[rng.Next(possibleFacts.Count)];
 
-        public List<AlternativeFact> GetAllFacts(List<int> factsToIgnore)
-        {
-            return _db.AlternativeFacts.Where(pFact => !factsToIgnore.Contains(pFact.AlternativeFactID))
-                                       .ToList();
+            _timerHandler.Add(fact);
+
+            return fact;
         }
 
         public void WriteFact(string description, ulong AuthorID)
@@ -43,6 +43,10 @@ namespace BaliBotDotNet.Data
 
         public AlternativeFact GetFact(int factID)
         {
+            if (_timerHandler.FactsOnCooldown.Contains(factID))
+            {
+                return null;
+            }
             var rs = _db.AlternativeFacts.Find(factID);
             return rs;
         }

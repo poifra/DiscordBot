@@ -10,18 +10,19 @@ namespace BaliBotDotNet.Utilities
     public class AlternativeFactCooldownHandler : IAlternativeFactCooldownHandler
     {
         private Timer CoolDownTimer { get; set; }
-        private Dictionary<int, DateTime> FactsLastUsedAt { get; set; } = new Dictionary<int, DateTime>();
+        private Dictionary<int, DateTime> FactUsedDateById { get; set; } = [];
+        public List<int> FactsOnCooldown => [.. FactUsedDateById.Keys];
 
-        public List<int> FactsOnCooldown => [.. FactsLastUsedAt.Keys];
+        private static readonly int FactCooldownInMinutes = 30;
+        private static readonly double FactCheckIntervalInMS = 5000;
 
-        AlternativeFactCooldownHandler()
+        public AlternativeFactCooldownHandler()
         {
-            const double timerIntervalInMs = 5000;
 
             CoolDownTimer = new Timer()
             {
                 AutoReset = true,
-                Interval = timerIntervalInMs,
+                Interval = FactCheckIntervalInMS,
             };
 
             CoolDownTimer.Elapsed += UpdateAlternativeFacts;
@@ -30,23 +31,21 @@ namespace BaliBotDotNet.Utilities
 
         private void UpdateAlternativeFacts(object sender, ElapsedEventArgs e)
         {
-            const int CoolDownInMinutes = 30;
+            var factIDsToRemove = FactUsedDateById.Where(pFact => pFact.Value.AddMinutes(FactCooldownInMinutes) < DateTime.Now).Select(pFact => pFact.Key).ToList();
 
-            var factsToRemove = FactsLastUsedAt.Where(pFact => pFact.Value.AddMinutes(CoolDownInMinutes) < DateTime.Now).Select(pFact => pFact.Key).ToList();
-
-            if (factsToRemove.Any())
+            if (factIDsToRemove.Count != 0)
             {
-                foreach (var fact in factsToRemove)
+                foreach (var factID in factIDsToRemove)
                 {
-                    FactsLastUsedAt.Remove(fact);
+                    FactUsedDateById.Remove(factID);
                 }
             }
         }
 
         public void Add(AlternativeFact fact)
         {
-            if(fact != null && !FactsLastUsedAt.ContainsKey(fact.AlternativeFactID))
-                FactsLastUsedAt.Add(fact.AlternativeFactID, DateTime.Now);
+            if(fact != null && !FactUsedDateById.ContainsKey(fact.AlternativeFactID))
+                FactUsedDateById.Add(fact.AlternativeFactID, DateTime.Now);
         }
     }
 }
