@@ -13,9 +13,7 @@ namespace BalibotTest.MeasurementResolving
             foreach (var measurementName in
                 MeasurementConversionHandler.AvailableMeasurementNames)
             {
-                var regex = new Regex(@"([-+]?[0-9]*\.?[0-9]+)\s*(" +
-                                      measurementName + @")([\s\t\n]+|$)",
-                                        RegexOptions.IgnoreCase);
+                var regex = new Regex(@"([-+]?[0-9]*\.?[0-9]+)\s*("+measurementName+@")\b", RegexOptions.IgnoreCase);
                 var matches = regex.Matches(message);
                 foreach (Match match in matches)
                 {

@@ -10,20 +10,18 @@ using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.IO;
 using System.Net.Http;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Threading;
 using BaliBotDotNet.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace BaliBotDotNet
 {
     public class Program
     {
-        readonly UOMConverter Converter = new();
         private readonly IConfiguration _configuration;
-        private readonly MessageRepository _messageRepository;
+        private readonly IMessageRepository _messageRepository;
         private readonly IServiceProvider _services;
         private char? forbiddenLetter = null;
         private readonly DiscordSocketConfig _socketConfig = new()
@@ -48,14 +46,14 @@ namespace BaliBotDotNet
                 .AddSingleton<InteractionHandler>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
-                .AddDbContext<BaliBotDbContext>()
-                .AddSingleton<IMessageRepository, MessageRepository>()
-                .AddSingleton<IReminderRepository, ReminderRepository>()
-                .AddSingleton<IAuthorRepository, AuthorRepository>()
-                .AddSingleton<IAlternativeFactRepository, AlternativeFactRepository>()
+                .AddDbContext<BaliBotDbContext>(ServiceLifetime.Scoped)
+                .AddScoped<IMessageRepository, MessageRepository>()
+                .AddScoped<IReminderRepository, ReminderRepository>()
+                .AddScoped<IAuthorRepository, AuthorRepository>()
+                .AddScoped<IAlternativeFactRepository, AlternativeFactRepository>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
-            _messageRepository = new MessageRepository(new BaliBotDbContext());
+            _messageRepository = _services.GetRequiredService<IMessageRepository>(); // Retrieve from DI container
         }
         static void Main(string[] args)
             => new Program()
@@ -65,6 +63,14 @@ namespace BaliBotDotNet
 
         private async Task RunAsync()
         {
+            // Ensure database & schema exist / are upgraded
+            using (var scope = _services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<BaliBotDbContext>();
+                // Applies all pending migrations; creates DB if missing
+                db.Database.Migrate();
+            }
+
             var client = _services.GetRequiredService<DiscordSocketClient>();
 
             client.Log += LogAsync;
@@ -74,9 +80,7 @@ namespace BaliBotDotNet
             await client.LoginAsync(TokenType.Bot, _configuration["token"]);
             await client.StartAsync();
 
-            //Initialize the logic required to register commands.
-            await _services.GetRequiredService<InteractionHandler>()
-                .InitializeAsync();
+            await _services.GetRequiredService<InteractionHandler>().InitializeAsync();
             await Task.Delay(Timeout.Infinite);
         }
 
