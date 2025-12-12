@@ -1,6 +1,7 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Services;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -164,15 +165,6 @@ namespace BaliBotDotNet.Modules
         {
             string fact = await WebService.GetFactAsync();
             await RespondAsync(fact);
-        }
-
-        [SlashCommandAttribute("lichesspuzzle","Gets the daily lichess puzzle")]
-        public async Task GetLichessPuzzle()
-        {
-            var puzzle = await WebService.GetLichessPuzzle();
-            var embed = new EmbedBuilder().WithImageUrl(puzzle.ImageURL).Build();
-
-            await RespondAsync("Daily puzzle", [embed], false, false);
         }
 
         [SlashCommand("xkcd", "Gets an XKCD comic.")]

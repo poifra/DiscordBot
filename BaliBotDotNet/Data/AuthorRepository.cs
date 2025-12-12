@@ -16,5 +16,12 @@ namespace BaliBotDotNet.Data
         {
             return _db.Authors.Where(x=>x.AuthorID ==  authorID).FirstOrDefault();
         }
+
+        public void ToggleQuotable(Author author)
+        {
+            author.IsQuotable = !author.IsQuotable;
+            _db.Authors.Update(author);
+            _db.SaveChanges();
+        }
     }
 }

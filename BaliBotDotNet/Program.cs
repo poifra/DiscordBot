@@ -21,7 +21,6 @@ namespace BaliBotDotNet
     public class Program
     {
         private readonly IConfiguration _configuration;
-        private readonly IMessageRepository _messageRepository;
         private readonly IServiceProvider _services;
         private char? forbiddenLetter = null;
         private readonly DiscordSocketConfig _socketConfig = new()
@@ -53,7 +52,6 @@ namespace BaliBotDotNet
                 .AddScoped<IAlternativeFactRepository, AlternativeFactRepository>()
                 .BuildServiceProvider();
             MeasurementConversionHandler.GenerateAvailableMeasurementsList();
-            _messageRepository = _services.GetRequiredService<IMessageRepository>(); // Retrieve from DI container
         }
         static void Main(string[] args)
             => new Program()
@@ -86,6 +84,7 @@ namespace BaliBotDotNet
 
         private async Task MessageHandler(SocketMessage message)
         {
+            var _messageRepository = _services.GetRequiredService<IMessageRepository>();
             SocketGuild guild = (message.Channel as SocketGuildChannel)?.Guild;
        
             if (message.Author.Username == "subpixelmaster4000")

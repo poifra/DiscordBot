@@ -1,5 +1,4 @@
-﻿using BaliBotDotNet.Models;
-using BaliBotDotNet.Utilities.Helpers;
+﻿using BaliBotDotNet.Utilities.Helpers;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -7,10 +6,8 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Reflection;
 using System.Text;
-using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Timers;
-using System.Xml.Linq;
 
 namespace BaliBotDotNet.Services
 {
@@ -116,6 +113,7 @@ namespace BaliBotDotNet.Services
             {
                 await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testguild"]),true);
                 await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["ragnacord"]),true);
+                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["greencord"]),true);
             }
             else
                 await _handler.RegisterCommandsGloballyAsync(true);

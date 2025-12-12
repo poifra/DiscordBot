@@ -1,6 +1,5 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Models;
-using Dapper;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Data.Sqlite;
@@ -44,43 +43,68 @@ namespace BaliBotDotNet.Data
 
         public void InsertBulkMessage(IEnumerable<IMessage> messages, SocketGuild guild)
         {
-            foreach (IMessage message in messages)
-            {
-                InsertMessage(message, guild);
-            }
+            var newAuthors = messages
+                .Select(x => x.Author)
+                .DistinctBy(x => x.Id)
+                .Where(a => !_db.Authors.Any(dbA => dbA.AuthorID == a.Id))
+                .Select(a => new Author
+                {
+                    AuthorID = a.Id,
+                    Username = a.ToString(),
+                });
+            _db.Authors.AddRange(newAuthors);
+            _db.AddRange(messages
+                .Where(m => !_db.Messages.Any(dbM => dbM.MessageID == m.Id))
+                .Select(m => new Message
+                {
+                    MessageID = m.Id,
+                    AuthorID = m.Author.Id,
+                    GuildID = guild.Id,
+                    Content = m.Content,
+                    DateSent = m.Timestamp.DateTime.ToString(CultureInfo.InvariantCulture)
+                }));
+            _db.SaveChanges();
+            _db.ChangeTracker.Clear();
+
         }
 
         public void InsertMessage(IMessage discordMessage, SocketGuild guild, SqliteConnection con = null)
         {
+            var messageExists = _db.Messages.Any(x => x.MessageID == discordMessage.Id);
             var author = _db.Authors.FirstOrDefault(x => x.AuthorID == discordMessage.Author.Id);
             if (author == null)
             {
-                _db.Authors.Add(new Author
+                author = new Author
                 {
                     AuthorID = discordMessage.Author.Id,
                     Username = discordMessage.Author.ToString(),
+                };
+                _db.Authors.Add(author);
+            }
+            if (!messageExists)
+            {
+                _db.Messages.Add(new Message
+                {
+                    MessageID = discordMessage.Id,
+                    AuthorID = discordMessage.Author.Id,
+                    GuildID = guild.Id,
+                    Content = discordMessage.Content,
+                    DateSent = discordMessage.Timestamp.DateTime.ToString(CultureInfo.InvariantCulture)
                 });
             }
-            _db.Messages.Add(new Message
-            {
-                MessageID = discordMessage.Id,
-                AuthorID = discordMessage.Author.Id,
-                GuildID = guild.Id,
-                Content = discordMessage.Content,
-                DateSent = discordMessage.Timestamp.DateTime.ToString(CultureInfo.InvariantCulture)
-            });
-
             _db.SaveChanges();
         }
 
         public void DropMessages(ulong serverID)
         {
             var messageList = _db.Messages.Where(x => x.GuildID == serverID);
-            foreach (var message in messageList)
-            {
-                _db.Messages.Remove(message);
-            }
+            _db.Messages.RemoveRange(messageList);
             _db.SaveChanges();
+        }
+
+        public Message GetMostRecentMessage(ulong guildId)
+        {
+            return _db.Messages.AsNoTracking().Where(x => x.GuildID == guildId).OrderByDescending(x => x.DateSent).FirstOrDefault();
         }
     }
 

@@ -5,5 +5,6 @@ namespace BaliBotDotNet.Data.Interfaces
     public interface IAuthorRepository
     {
         Author GetAuthor(ulong authorID);
+        void ToggleQuotable(Author author);
     }
 }

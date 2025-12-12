@@ -2,9 +2,12 @@
 using BaliBotDotNet.Models;
 using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
+using Discord.Commands;
 using Discord.Interactions;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
@@ -16,13 +19,34 @@ using RunMode = Discord.Interactions.RunMode;
 
 namespace BaliBotDotNet.Modules
 {
-    public class WordModule(IMessageRepository messageRepository, 
-                            IAuthorRepository authorRepository,
-                            IAlternativeFactRepository alternativeFactRepository) : InteractionModuleBase<SocketInteractionContext>
+
+    public class WordModule : InteractionModuleBase<SocketInteractionContext>
     {
-        private readonly IMessageRepository _messageRepository = messageRepository;
-        private readonly IAuthorRepository _authorRepository = authorRepository;
-        private readonly IAlternativeFactRepository _alternativeFactRepository = alternativeFactRepository;
+        private sealed class LanguageModelCache
+        {
+            public DateTime BuiltAt { get; set; }
+            public Dictionary<string, int> Unigrams { get; set; }
+            public Dictionary<string, Dictionary<string, int>> Bigrams { get; set; }
+            public int TotalUnigrams { get; set; }
+        }
+
+        private readonly IMessageRepository _messageRepository;
+        private readonly IAuthorRepository _authorRepository;
+        private readonly IAlternativeFactRepository _alternativeFactRepository;
+        private readonly IServiceScopeFactory _scopeFactory;
+        // Simple per-guild language model cache to avoid rebuilding every invocation.
+        private static readonly ConcurrentDictionary<ulong, LanguageModelCache> _languageModelCache = new();
+
+        public WordModule(IMessageRepository messageRepository, 
+                          IAuthorRepository authorRepository,
+                          IAlternativeFactRepository alternativeFactRepository,
+                          IServiceScopeFactory scopeFactory)
+        {
+            _messageRepository = messageRepository;
+            _authorRepository = authorRepository;
+            _alternativeFactRepository = alternativeFactRepository;
+            _scopeFactory = scopeFactory;
+        }
 
         [SlashCommand("leaderboard", "Gets the leaderboard of most active users")]
         public async Task LeaderboardAsync(int maximum = 10)
@@ -36,6 +60,32 @@ namespace BaliBotDotNet.Modules
             }
             var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
             await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.User} {kvPair.Count}").Join('\n'));
+        }
+
+        [SlashCommand("averagesentence", "Gets the average of the server")]
+        public async Task ServerAverage(int wordCount = 10)
+        {
+            await DeferAsync();
+
+            if (wordCount < 3 || wordCount > 30)
+            {
+                await FollowupAsync("Count must be between 3 and 30 for a sensible sentence.");
+                return;
+            }
+
+            var guildId = Context.Guild.Id;
+            var model = GetOrBuildLanguageModel(guildId);
+
+            if (model.Unigrams.Count == 0)
+            {
+                await FollowupAsync("Not enough data to build an average sentence.");
+                return;
+            }
+
+            var rng = new Random();
+            var sentence = GenerateAverageSentence(model, wordCount, rng);
+
+            await FollowupAsync(sentence);
         }
 
         [SlashCommand("socialcredit", "Displays social credit")]
@@ -117,7 +167,7 @@ namespace BaliBotDotNet.Modules
         }
 
         [SlashCommand("reload", "Loads message history", runMode: RunMode.Async)]
-        public async Task ReloadAsync(bool reloadSingleChannel = false)
+        public async Task ReloadAsync(bool reloadSingleChannel = false, bool deleteHistory = false)
         {
             if (!Context.User.Username.Equals("thebali"))
             {
@@ -125,42 +175,69 @@ namespace BaliBotDotNet.Modules
                 return;
             }
 
-            await DeferAsync(false);
+            // Respond immediately to avoid interaction timeout, then do the heavy work in background.
+            await RespondAsync("Starting full message history reload (excluding threads). Progress will be posted here.");
 
-            await FollowupAsync("Loading....");
-            const int messageCount = 10_000_000;
-            var channels = Context.Guild.TextChannels;
-            int numberOfProcessedMessages = 0;
+            var guild = Context.Guild;
+            var currentChannel = Context.Channel;
 
-            if (reloadSingleChannel)
+            _ = Task.Run(async () =>
             {
-                _messageRepository.DropMessages(Context.Channel.Id);
-            }
-            else
-            {
-                _messageRepository.DropMessages(Context.Guild.Id);
-            }
+                using var scope = _scopeFactory.CreateScope();
+                var repo = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
 
-            foreach (var channel in channels)
-            {
-                if(reloadSingleChannel && channel.Id != Context.Channel.Id)
-                {
-                    continue;
-                }
-                IEnumerable<IMessage> messages = null;
+                var channels = guild.TextChannels;
+                int totalProcessed = 0;
+
                 try
                 {
-                    messages = await channel.GetMessagesAsync(messageCount).FlattenAsync();
-                    messages = messages.Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$') && !x.ToString().StartsWith("p!c"));
-                    _messageRepository.InsertBulkMessage(messages, Context.Guild);
+                    if (deleteHistory)
+                    {
+                        if (reloadSingleChannel)
+                            repo.DropMessages(currentChannel.Id);
+                        else
+                            repo.DropMessages(guild.Id);
+                    }
+
+                    foreach (var channel in channels)
+                    {
+                        if (reloadSingleChannel && channel.Id != currentChannel.Id) continue;
+
+                        int channelProcessed = 0;
+
+                        try
+                        {
+                            var mostRecentMessage = repo.GetMostRecentMessage(channel.Id);
+                            mostRecentMessage ??= new Message { MessageID = 0 };
+                            await foreach (var page in channel.GetMessagesAsync(mostRecentMessage.MessageID, Direction.After, int.MaxValue))
+                            {
+                                var batch = page
+                                    .Where(x => !x.Author.IsBot && !x.ToString().StartsWith('$') && !x.ToString().StartsWith("p!c"))
+                                    .ToList();
+
+                                if (batch.Count > 0)
+                                {
+                                    repo.InsertBulkMessage(batch, guild);
+                                    channelProcessed += batch.Count;
+                                    totalProcessed += batch.Count;
+                                }
+                            }
+
+                            await currentChannel.SendMessageAsync($"Loaded {channelProcessed} messages from #{channel.Name}.");
+                        }
+                        catch (Discord.Net.HttpException)
+                        {
+                            await currentChannel.SendMessageAsync($"I can't read #{channel.Name}.");
+                        }
+                    }
+
+                    await currentChannel.SendMessageAsync($"Done loading {totalProcessed} messages!");
                 }
-                catch (Discord.Net.HttpException)
+                catch (Exception ex)
                 {
-                    await ReplyAsync("I can't read " + channel.Name);
+                    await currentChannel.SendMessageAsync($"Reload failed: {ex.Message}");
                 }
-                numberOfProcessedMessages += messages?.Count() ?? 0;
-            }
-            await FollowupAsync($"Done loading {numberOfProcessedMessages} messages!");
+            });
         }
 
         [SlashCommand("wordlength", "Finds the most used word with the specified length", runMode: RunMode.Async)]
@@ -225,16 +302,28 @@ namespace BaliBotDotNet.Modules
             await RespondAsync($"{answer}");
         }
 
+        [SlashCommand("togglequote", "Toggles wether the user is quotable or not")]
+        public async Task ToggleQuote()
+        {
+            await DeferAsync();
+            ulong authorID = Context.User.Id;
+            var author = _authorRepository.GetAuthor(authorID);
+            _authorRepository.ToggleQuotable(author);
+            string status = author.IsQuotable ? "now" : "no longer";
+            await FollowupAsync($"{Context.User.Username} is {status} quotable.");
+        }
+
         [SlashCommand("quote", "Quotes someone at random, without context", runMode: RunMode.Async)]
+        [Alias("citation")]
         public async Task Quote(SocketGuildUser user = null)
         {
+            
             await DeferAsync();
             var messageList = user == null ? 
                   _messageRepository.GetAllMessages(Context.Guild.Id) 
                 : _messageRepository.GetAllMessages(Context.Guild.Id,user.Id);
             var rng = new Random();
             var index = rng.Next(messageList.Count);
-
             if (index <= 0)
             {
                 await FollowupAsync($"This person either has no messages or doesn't wish to be quoted.");
@@ -249,7 +338,11 @@ namespace BaliBotDotNet.Modules
                 message = messageList[index];
             }
             var author = _authorRepository.GetAuthor(message.AuthorID);
-            await FollowupAsync($"{message.Content} -{author.Username}, {DateTime.Parse(message.DateSent):dd MMMM yyyy}");
+            SocketGuildUser authorObject = (SocketGuildUser)await Context.Channel.GetUserAsync(message.AuthorID);
+            var displayName = authorObject != null ? authorObject.DisplayName : author.Username;
+
+            await FollowupAsync($"{message.Content} -{displayName}, {DateTime.Parse(message.DateSent):dd MMMM yyyy}");
+
         }
 
         [SlashCommand("count", "Counts the number of occurences of a specified word")]
@@ -369,5 +462,161 @@ namespace BaliBotDotNet.Modules
             }
             return dict;
         }
+
+        // -------- Language Model Helpers --------
+
+        private LanguageModelCache GetOrBuildLanguageModel(ulong guildId)
+        {
+            if (_languageModelCache.TryGetValue(guildId, out var cached))
+            {
+                // Rebuild occasionally
+                if ((DateTime.UtcNow - cached.BuiltAt).TotalDays < 30)
+                    return cached;
+            }
+
+            var messages = _messageRepository.GetAllMessages(guildId);
+            Dictionary<string, int> unigrams = [];
+            Dictionary<string, Dictionary<string, int>> bigrams = [];
+
+            foreach (var msg in messages)
+            {
+                var tokens = Tokenize(msg.Content).ToList();
+                if (tokens.Count == 0) continue;
+
+                for (int i = 0; i < tokens.Count; i++)
+                {
+                    var w = tokens[i];
+                    if (unigrams.TryGetValue(w, out int v))
+                        unigrams[w] = v + 1;
+                    else
+                        unigrams[w] = 1;
+
+                    if (i < tokens.Count - 1)
+                    {
+                        var next = tokens[i + 1];
+                        if (!bigrams.TryGetValue(w, out var inner))
+                        {
+                            inner = [];
+                            bigrams[w] = inner;
+                        }
+                        inner.TryGetValue(next, out int count);
+                        inner[next] = count + 1;
+                    }
+                }
+            }
+
+            // Remove extremely rare words to reduce noise.
+            unigrams = unigrams.Where(kv => kv.Value >= 2 && kv.Key.Length > 1).ToDictionary(x => x.Key, x => x.Value);
+
+            var model = new LanguageModelCache
+            {
+                BuiltAt = DateTime.UtcNow,
+                Unigrams = unigrams,
+                Bigrams = bigrams,
+                TotalUnigrams = unigrams.Values.Sum()
+            };
+
+            _languageModelCache[guildId] = model;
+            return model;
+        }
+
+        private static IEnumerable<string> Tokenize(string content)
+        {
+            return content
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(w => w.Trim())
+                .Where(w => !string.IsNullOrWhiteSpace(w))
+                .Where(w => !w.Contains("http"))
+                .Select(w => Regex.Replace(w, @"^[\p{P}]+|[\p{P}]+$", "")) // strip leading/trailing punctuation
+                .Where(w => w.Length > 0
+                            && !w.Any(c => char.IsControl(c))
+                            && !w.Contains('<')
+                            && !w.StartsWith('@'))
+                .Select(w => w.ToLowerInvariant());
+        }
+
+        private static string GenerateAverageSentence(LanguageModelCache model, int targetLength, Random rng)
+        {
+            if (model.Unigrams.Count == 0) return string.Empty;
+
+            // Choose a starting word among top frequency lexical items (avoid filler like "the" sometimes).
+            var startPool = model.Unigrams
+                .OrderByDescending(kv => kv.Value)
+                .Where(kv => kv.Key.Length > 2 && !IsStopWord(kv.Key))
+                .Take(50)
+                .Select(kv => kv.Key)
+                .ToList();
+
+            string current = startPool.Count > 0 ? startPool[rng.Next(startPool.Count)]
+                                                 : model.Unigrams.OrderByDescending(kv => kv.Value).First().Key;
+
+            List<string> words = [Capitalize(current)];
+            HashSet<string> used = [];
+
+            for (int i = 1; i < targetLength; i++)
+            {
+                string next = null;
+
+                if (model.Bigrams.TryGetValue(current, out var nextDict))
+                {
+                    next = WeightedPick(nextDict, rng, w => !used.Contains(w));
+                }
+
+                if (next == null)
+                {
+                    // Fallback to overall distribution.
+                    next = WeightedPick(model.Unigrams, rng, w => !used.Contains(w));
+                }
+
+                if (next == null) break;
+
+                words.Add(next);
+                used.Add(next);
+                current = next;
+            }
+
+            // Basic smoothing: if last word doesn't end sentence punctuation, add a period.
+            var last = words[^1];
+            if (!Regex.IsMatch(last, @"[.!?]$"))
+                words[^1] = last + ".";
+
+            // Light post-format: capitalize first word, fix spacing.
+            return string.Join(' ', words);
+        }
+
+        private static string WeightedPick(Dictionary<string, int> dict, Random rng, Func<string, bool> filter)
+        {
+            var filtered = dict.Where(kv => filter == null || filter(kv.Key)).ToList();
+            if (filtered.Count == 0) return null;
+            int total = filtered.Sum(kv => kv.Value);
+            int roll = rng.Next(0, total);
+            int cumulative = 0;
+            foreach (var kv in filtered)
+            {
+                cumulative += kv.Value;
+                if (roll < cumulative)
+                    return kv.Key;
+            }
+            return filtered[^1].Key;
+        }
+
+        private static string WeightedPick(Dictionary<string, int> dict, Random rng)
+        {
+            return WeightedPick(dict, rng, _ => true);
+        }
+
+        private static bool IsStopWord(string w)
+        {
+            // Minimal list to reduce sentences starting with very common fillers.
+            return w is "the" or "and" or "but" or "or" or "a" or "to" or "of";
+        }
+
+        private static string Capitalize(string w)
+        {
+            if (string.IsNullOrEmpty(w)) return w;
+            if (w.Length == 1) return w.ToUpperInvariant();
+            return char.ToUpperInvariant(w[0]) + w[1..];
+        }
     }
+
 }
