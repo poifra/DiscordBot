@@ -11,10 +11,10 @@ using System.Timers;
 
 namespace BaliBotDotNet.Services
 {
-    public class InteractionHandler(DiscordSocketClient client, InteractionService handler, IServiceProvider services, IConfiguration config)
+    public class InteractionHandler(DiscordSocketClient client, InteractionService interactionService, IServiceProvider services, IConfiguration config)
     {
         private readonly DiscordSocketClient _client = client;
-        private readonly InteractionService _handler = handler;
+        private readonly InteractionService _interactionService = interactionService;
         private readonly IServiceProvider _services = services;
         private readonly IConfiguration _configuration = config;
 
@@ -75,9 +75,9 @@ namespace BaliBotDotNet.Services
         public async Task InitializeAsync()
         {
             _client.Ready += ReadyAsync;
-            _handler.Log += LogAsync;
+            _interactionService.Log += LogAsync;
 
-            await _handler.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
+            await _interactionService.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
 
             // Process the InteractionCreated payloads to execute Interactions commands
             _client.InteractionCreated += HandleInteraction;
@@ -94,7 +94,7 @@ namespace BaliBotDotNet.Services
             try
             {
                 var context = new SocketInteractionContext(_client, interaction);
-                var result = await _handler.ExecuteCommandAsync(context, _services);
+                var result = await _interactionService.ExecuteCommandAsync(context, _services);
             }
             catch
             {
@@ -111,12 +111,12 @@ namespace BaliBotDotNet.Services
             // Since Global Commands take around 1 hour to register, we should use a test guild to instantly update and test our commands.
             if (Program.IsDebug())
             {
-                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testguild"]),true);
-                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["ragnacord"]),true);
-                await _handler.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["greencord"]),true);
+                await _interactionService.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["testguild"]),true);
+                await _interactionService.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["ragnacord"]),true);
+                await _interactionService.RegisterCommandsToGuildAsync(ulong.Parse(_configuration["greencord"]),true);
             }
             else
-                await _handler.RegisterCommandsGloballyAsync(true);
+                await _interactionService.RegisterCommandsGloballyAsync(true);
         }
 
         public async Task MessageReceivedAsync(SocketMessage message)

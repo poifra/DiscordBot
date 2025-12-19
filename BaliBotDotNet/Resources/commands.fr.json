@@ -1,0 +1,278 @@
+{
+  "gcd": {
+    "name": "pgcd",
+    "description": "Renvoie le PGCD de deux nombres",
+    "options": {
+      "a": {
+        "name": "a",
+        "description": "Premier nombre"
+      },
+      "b": {
+        "name": "b",
+        "description": "Deuxième nombre"
+      }
+    }
+  },
+  "roll": {
+    "name": "lancer",
+    "description": "Lance des dés. Ex: /lancer stats ou /lancer 5 1d6",
+    "options": {
+      "isRollStats": {
+        "name": "stats",
+        "description": "Lancer pour des stats D&D (4d6 drop lowest)"
+      },
+      "numberOfOccurences": {
+        "name": "nombre",
+        "description": "Nombre de fois qu'on lance les dés"
+      },
+      "dice": {
+        "name": "des",
+        "description": "Les dés à lancer (ex: 1d6)"
+      },
+      "removeValues": {
+        "name": "retirer",
+        "description": "Retirer les valeurs les plus hautes/basses"
+      }
+    }
+  },
+  "convertcurrency": {
+    "name": "devise",
+    "description": "Convertit une devise A vers une devise B",
+    "options": {
+      "amount": {
+        "name": "montant",
+        "description": "Le montant à convertir"
+      },
+      "source": {
+        "name": "source",
+        "description": "La devise d'origine (ex: USD)"
+      },
+      "destination": {
+        "name": "destination",
+        "description": "La devise cible (ex: EUR)"
+      }
+    }
+  },
+  "8ball": {
+    "description": "Prédit le futur",
+    "name": "8ball",
+    "options": {
+      "question": {
+        "name": "question",
+        "description": "Votre question"
+      }
+    }
+  },
+  "help": {
+    "description": "Affiche toutes les commandes",
+    "name": "aide"
+  },
+  "cat": {
+    "name": "chat",
+    "description": "Obtient une image de chat",
+    "options": {
+      "word": {
+        "name": "tag",
+        "description": "Tag spécifique ou 'gif'"
+      }
+    }
+  },
+  "dog": {
+    "name": "chien",
+    "description": "Obtient une image de chien"
+  },
+  "duck": {
+    "name": "canard",
+    "description": "Obtient une image de canard"
+  },
+  "fox": {
+    "name": "renard",
+    "description": "Obtient une image de renard"
+  },
+  "dadjoke": {
+    "name": "blaguepapa",
+    "description": "Raconte une blague de papa (en anglais)"
+  },
+  "fact": {
+    "name": "fait",
+    "description": "Donne un fait aléatoire"
+  },
+  "xkcd": {
+    "name": "xkcd",
+    "description": "Affiche une bande dessinée XKCD",
+    "options": {
+      "xkcdID": {
+        "name": "id",
+        "description": "ID de la BD, 'latest' ou vide"
+      }
+    }
+  },
+  "deletereminder": {
+    "name": "supprimerrappel",
+    "description": "Supprime un rappel spécifique",
+    "options": {
+      "reminderID": {
+        "name": "id",
+        "description": "L'ID du rappel à supprimer"
+      }
+    }
+  },
+  "reminder": {
+    "name": "rappel",
+    "description": "Définit un rappel qui vous pingera dans un temps donné",
+    "options": {
+      "amount": {
+        "name": "duree",
+        "description": "Quantité de temps"
+      },
+      "time": {
+        "name": "unite",
+        "description": "Unité (minutes, heures, jours...)"
+      },
+      "text": {
+        "name": "message",
+        "description": "Le texte du rappel"
+      }
+    }
+  },
+  "leaderboard": {
+    "name": "classement",
+    "description": "Affiche le classement des utilisateurs les plus actifs",
+    "options": {
+      "maximum": {
+        "name": "limite",
+        "description": "Nombre d'utilisateurs à afficher"
+      }
+    }
+  },
+  "averagesentence": {
+    "name": "phrasemoyenne",
+    "description": "Génère une phrase moyenne basée sur le chat du serveur",
+    "options": {
+      "wordCount": {
+        "name": "mots",
+        "description": "Longueur de la phrase"
+      }
+    }
+  },
+  "socialcredit": {
+    "name": "creditsocial",
+    "description": "Affiche votre crédit social"
+  },
+  "messagecount": {
+    "name": "compteurmessages",
+    "description": "Affiche votre nombre total de messages envoyés"
+  },
+  "alternativefact": {
+    "name": "faitalternatif",
+    "description": "Récupère un fait alternatif",
+    "options": {
+      "factId": {
+        "name": "id",
+        "description": "ID du fait (optionnel)"
+      }
+    }
+  },
+  "deletefact": {
+    "name": "supprimerfait",
+    "description": "Supprime un fait alternatif",
+    "options": {
+      "factId": {
+        "name": "id",
+        "description": "ID du fait à supprimer"
+      }
+    }
+  },
+  "writefact": {
+    "name": "ecrirefait",
+    "description": "Écrit un nouveau fait alternatif",
+    "options": {
+      "fact": {
+        "name": "contenu",
+        "description": "Le contenu du fait (max 200 car.)"
+      }
+    }
+  },
+  "reload": {
+    "name": "recharger",
+    "description": "Recharge l'historique des messages",
+    "options": {
+      "reloadSingleChannel": {
+        "name": "canal_unique",
+        "description": "Recharger uniquement ce canal"
+      },
+      "deleteHistory": {
+        "name": "effacer_historique",
+        "description": "Effacer l'historique avant de recharger"
+      }
+    }
+  },
+  "wordlength": {
+    "name": "longueurmot",
+    "description": "Trouve le mot le plus utilisé d'une certaine longueur",
+    "options": {
+      "wordLength": {
+        "name": "longueur",
+        "description": "Longueur du mot"
+      }
+    }
+  },
+  "choose": {
+    "name": "choisir",
+    "description": "Choisit un élément dans une liste",
+    "options": {
+      "choicesString": {
+        "name": "choix",
+        "description": "Liste des choix séparés par des espaces"
+      }
+    }
+  },
+  "coinflip": {
+    "name": "pileouface",
+    "description": "Lance une pièce (Pile ou Face)"
+  },
+  "togglequote": {
+    "name": "basculercitation",
+    "description": "Active ou désactive la possibilité d'être cité"
+  },
+  "quote": {
+    "name": "citation",
+    "description": "Cite quelqu'un au hasard, sans contexte",
+    "options": {
+      "user": {
+        "name": "utilisateur",
+        "description": "L'utilisateur à citer (optionnel)"
+      }
+    }
+  },
+  "count": {
+    "name": "compter",
+    "description": "Compte le nombre d'occurrences d'un mot",
+    "options": {
+      "word": {
+        "name": "mot",
+        "description": "Le mot à chercher"
+      }
+    }
+  },
+  "ngram": {
+    "name": "ngram",
+    "description": "Affiche une liste de n-grammes de l'utilisateur",
+    "options": {
+      "size": {
+        "name": "taille",
+        "description": "Taille du n-gramme (laisser vide pour tout)"
+      }
+    }
+  },
+  "userinfo": {
+    "name": "infoutilisateur",
+    "description": "Affiche des infos sur un utilisateur",
+    "options": {
+      "usr": {
+        "name": "utilisateur",
+        "description": "L'utilisateur cible"
+      }
+    }
+  }
+}

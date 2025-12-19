@@ -314,7 +314,6 @@ namespace BaliBotDotNet.Modules
         }
 
         [SlashCommand("quote", "Quotes someone at random, without context", runMode: RunMode.Async)]
-        [Alias("citation")]
         public async Task Quote(SocketGuildUser user = null)
         {
             
@@ -340,9 +339,10 @@ namespace BaliBotDotNet.Modules
             var author = _authorRepository.GetAuthor(message.AuthorID);
             SocketGuildUser authorObject = (SocketGuildUser)await Context.Channel.GetUserAsync(message.AuthorID);
             var displayName = authorObject != null ? authorObject.DisplayName : author.Username;
+            DateTime date = DateTime.Parse(message.DateSent);
+            long unixTimestamp = ((DateTimeOffset)date).ToUnixTimeSeconds();
 
-            await FollowupAsync($"{message.Content} -{displayName}, {DateTime.Parse(message.DateSent):dd MMMM yyyy}");
-
+            await FollowupAsync($"{message.Content} -{displayName}, <t:{unixTimestamp}:D>");
         }
 
         [SlashCommand("count", "Counts the number of occurences of a specified word")]
