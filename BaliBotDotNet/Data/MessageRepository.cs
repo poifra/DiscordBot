@@ -106,6 +106,16 @@ namespace BaliBotDotNet.Data
         {
             return _db.Messages.AsNoTracking().Where(x => x.GuildID == guildId).OrderByDescending(x => x.DateSent).FirstOrDefault();
         }
+
+        public void DeleteMessage(ulong messageId)
+        {
+            var message = _db.Messages.FirstOrDefault(x => x.MessageID == messageId);
+            if (message != null)
+            {
+                _db.Messages.Remove(message);
+                _db.SaveChanges();
+            }
+        }
     }
 
     public class LeaderboardGrouping

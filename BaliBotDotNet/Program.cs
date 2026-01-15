@@ -89,6 +89,7 @@ namespace BaliBotDotNet
 
             client.Log += LogAsync;
             client.MessageReceived += MessageHandler;
+            client.MessageDeleted += MessageDeletedHandler;
             _services.GetRequiredService<CommandService>().Log += LogAsync;
 
             await client.LoginAsync(TokenType.Bot, _configuration["token"]);
@@ -198,6 +199,14 @@ namespace BaliBotDotNet
             {
                 await message.Channel.SendMessageAsync(regexResult);
             }
+        }
+
+        private async Task MessageDeletedHandler(Cacheable<IMessage, ulong> message, Cacheable<IMessageChannel, ulong> channel)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            messageRepository.DeleteMessage(message.Id);
+            await Task.CompletedTask;
         }
 
         private Task LogAsync(LogMessage log)

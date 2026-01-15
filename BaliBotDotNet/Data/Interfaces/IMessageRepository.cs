@@ -14,5 +14,6 @@ namespace BaliBotDotNet.Data.Interfaces
         List<LeaderboardGrouping> GetLeaderboard(ulong guildID, int maximum = 10);
         void DropMessages(ulong id);
         Message GetMostRecentMessage(ulong id);
+        void DeleteMessage(ulong messageId);
     }
 }
