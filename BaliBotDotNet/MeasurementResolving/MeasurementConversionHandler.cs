@@ -35,27 +35,27 @@ namespace BaliBotDotNet.MeasurementResolving
 
             var unitDefinitions = new List<(string Aliases, UnitInfo Info, string PairedAliases)>
             {
-                (("m,meter,meters", new UnitInfo(length, v => v, v => v, false), "ft,feet")),
-                (("ft,feet", new UnitInfo(length, v => v * 0.3048f, v => v / 0.3048f, false), "m,meter,meters")),
-                (("km,kilometer,kilometers", new UnitInfo(length, v => v * 1000f, v => v / 1000f, false), "miles,mile,mi")),
-                (("miles,mile,mi", new UnitInfo(length, v => v * 1609.34f, v => v / 1609.34f, false), "km,kilometer,kilometers")),
-                (("inch,inches", new UnitInfo(length, v => v * 0.0254f, v => v / 0.0254f, false), "cm")),
-                (("cm", new UnitInfo(length, v => v * 0.01f, v => v / 0.01f, false), "inch,inches")),
+                ("m,meter,meters", new UnitInfo(length, v => v, v => v, false), "ft,feet"),
+                ("ft,feet", new UnitInfo(length, v => v * 0.3048f, v => v / 0.3048f, false), "m,meter,meters"),
+                ("km,kilometer,kilometers", new UnitInfo(length, v => v * 1000f, v => v / 1000f, false), "miles,mile,mi"),
+                ("miles,mile,mi", new UnitInfo(length, v => v * 1609.34f, v => v / 1609.34f, false), "km,kilometer,kilometers"),
+                ("inch,inches", new UnitInfo(length, v => v * 0.0254f, v => v / 0.0254f, false), "cm"),
+                ("cm", new UnitInfo(length, v => v * 0.01f, v => v / 0.01f, false), "inch,inches"),
                 
-                (("°c,c,celsius", new UnitInfo(temperature, v => v, v => v, true), "°f,f,fahrenheit")),
-                (("°f,f,fahrenheit", new UnitInfo(temperature, v => (v - 32) * 5 / 9f, v => (v * 9 / 5f) + 32, true), "°c,c,celsius")),
+                ("°c,c,celsius", new UnitInfo(temperature, v => v, v => v, true), "°f,f,fahrenheit")),
+                ("°f,f,fahrenheit", new UnitInfo(temperature, v => (v - 32) * 5 / 9f, v => (v * 9 / 5f) + 32, true), "°c,c,celsius"),
 
-                (("kg,kilo,kilogram,kilos,kilograms", new UnitInfo(mass, v => v, v => v, false), "pounds,lb,pound,lbs")),
-                (("pounds,lb,pound,lbs", new UnitInfo(mass, v => v * 0.453592f, v => v / 0.453592f, false), "kg,kilo,kilogram,kilos,kilograms")),
+                ("kg,kilo,kilogram,kilos,kilograms", new UnitInfo(mass, v => v, v => v, false), "pounds,lb,pound,lbs"),
+                ("pounds,lb,pound,lbs", new UnitInfo(mass, v => v * 0.453592f, v => v / 0.453592f, false), "kg,kilo,kilogram,kilos,kilograms"),
 
-                (("ac,acre,acres", new UnitInfo(area, v => v * 4046.86f, v => v / 4046.86f, false), "m²")),
-                (("m²", new UnitInfo(area, v => v, v => v, false), "ac,acre,acres")),
+                ("ac,acre,acres", new UnitInfo(area, v => v * 4046.86f, v => v / 4046.86f, false), "m²"),
+                ("m²", new UnitInfo(area, v => v, v => v, false), "ac,acre,acres"),
 
-                (("kmh,km/h", new UnitInfo(speed, v => v, v => v, false), "mph")),
-                (("mph", new UnitInfo(speed, v => v * 1.60934f, v => v / 1.60934f, false), "kmh,km/h")),
+                ("kmh,km/h", new UnitInfo(speed, v => v, v => v, false), "mph"),
+                ("mph", new UnitInfo(speed, v => v * 1.60934f, v => v / 1.60934f, false), "kmh,km/h"),
 
-                (("lumen,lumens", new UnitInfo(illuminance, v => v, v => v, false), "foot candle,fc,ft-c,foot-candle")),
-                (("foot candle,fc,ft-c,foot-candle", new UnitInfo(illuminance, v => v * 10.764f, v => v / 10.764f, false), "lumen,lumens")),
+                ("lumen,lumens", new UnitInfo(illuminance, v => v, v => v, false), "foot candle,fc,ft-c,foot-candle"),
+                ("foot candle,fc,ft-c,foot-candle", new UnitInfo(illuminance, v => v * 10.764f, v => v / 10.764f, false), "lumen,lumens"),
             };
 
             UnitDatabase = new Dictionary<string, UnitInfo>();
@@ -79,13 +79,10 @@ namespace BaliBotDotNet.MeasurementResolving
         {
             if (UnitDatabase.TryGetValue(measurement.Name.ToLower(), out var unitInfo))
             {
-                // Convert source value to the base unit of its category
                 var valueInBase = unitInfo.ToBase(measurement.Amount);
 
-                // Find the target unit's info
                 if (UnitDatabase.TryGetValue(unitInfo.PairedUnit.ToLower(), out var targetUnitInfo))
                 {
-                    // Convert from base unit to the target unit
                     var finalValue = targetUnitInfo.FromBase(valueInBase);
                     return new Measurement(finalValue, unitInfo.PairedUnit, targetUnitInfo.CanBeNegative);
                 }
