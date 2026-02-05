@@ -1,8 +1,8 @@
 ﻿using BaliBotDotNet.Data;
 using BaliBotDotNet.Data.Interfaces;
+using BaliBotDotNet.MeasurementResolving;
 using BaliBotDotNet.Models;
 using BaliBotDotNet.Services;
-using BalibotTest.MeasurementResolving;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
@@ -61,7 +61,6 @@ namespace BaliBotDotNet
                 .BuildServiceProvider();
 
             _scopeFactory = _services.GetRequiredService<IServiceScopeFactory>();
-            MeasurementConversionHandler.GenerateAvailableMeasurementsList();
         }
 
         static async Task Main(string[] args)

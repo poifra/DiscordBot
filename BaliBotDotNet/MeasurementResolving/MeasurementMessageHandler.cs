@@ -1,4 +1,6 @@
-namespace BalibotTest.MeasurementResolving
+using System.Linq;
+
+namespace BaliBotDotNet.MeasurementResolving
 {
     public static class MeasurementMessageHandler
     {
@@ -7,32 +9,19 @@ namespace BalibotTest.MeasurementResolving
 
         public static string TryConvertMessage(string message)
         {
-
             var regexMatches = MeasurementRegexHandler.GetMeasurementsFromMessage(message);
 
-            var resultMessage = "";
+            var convertedParts = regexMatches
+                .Select(match => (match, result: MeasurementConversionHandler.TryConvertFrom(match)))
+                .Where(t => t.result != null &&
+                             t.result.Amount != 0 &&
+                             t.result.Amount is > MinAmountToConvert and < MaxAmountToConvert &&
+                             (t.result.CanBeNegative || t.result.Amount > 0))
+                .Select(t => $"{t.match} is {t.result}");
 
-            foreach (var regexMatch in regexMatches)
-            {
-                var conversionResult = MeasurementConversionHandler.TryConvertFrom(regexMatch);
-                if (conversionResult != null && conversionResult.Amount != 0
-                                             && conversionResult.Amount is > MinAmountToConvert and < MaxAmountToConvert
-                                             && (conversionResult.CanBeNegative || conversionResult.Amount > 0))
-                {
-                    resultMessage += regexMatch.ToString() + " is " + conversionResult.ToString() + ", ";
-                }
-            }
+            var resultMessage = string.Join(", ", convertedParts);
 
-            if (resultMessage.Length >= 2)
-            {
-                return resultMessage.Remove(resultMessage.Length - 2);
-            }
-            else
-            {
-                return null;
-            }
-
+            return string.IsNullOrEmpty(resultMessage) ? null : resultMessage;
         }
-
     }
 }

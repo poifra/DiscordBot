@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace BalibotTest.MeasurementResolving
+namespace BaliBotDotNet.MeasurementResolving
 {
     public class Measurement
     {
