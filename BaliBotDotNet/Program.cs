@@ -30,7 +30,7 @@ namespace BaliBotDotNet
             UseInteractionSnowflakeDate = false
         };
 
-        // Track a forbidden letter per guild for April 1st, thread-safe
+        // Track a forbidden letter per guild for April 1st, allegedly thread-safe
         private readonly ConcurrentDictionary<ulong, char> _forbiddenLettersByGuild = new();
 
         public Program()
@@ -77,7 +77,6 @@ namespace BaliBotDotNet
 
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            // Ensure database & schema exist / are upgraded
             using (var scope = _services.CreateScope())
             {
                 var db = scope.ServiceProvider.GetRequiredService<BaliBotDbContext>();
@@ -96,14 +95,13 @@ namespace BaliBotDotNet
 
             await _services.GetRequiredService<InteractionHandler>().InitializeAsync();
 
-            // Wait until cancellation (Ctrl+C) to gracefully stop the bot
             try
             {
                 await Task.Delay(Timeout.Infinite, cancellationToken);
             }
             catch (TaskCanceledException)
             {
-                // expected on shutdown
+                // shutdown
             }
             finally
             {
@@ -114,7 +112,7 @@ namespace BaliBotDotNet
 
         private async Task MessageHandler(SocketMessage message)
         {
-            // Ignore non-user messages and a specific username
+            // Tenez __316k__ loin des bots
             if (message.Author.Username == "subpixelmaster4000")
                 return;
             if (message.Source != MessageSource.User)
@@ -133,14 +131,12 @@ namespace BaliBotDotNet
 
             var now = DateTime.Now;
 
-            // Determine if April Fools behavior should be active:
             bool isTestGuild = TryGetTestGuildId(out var testGuildId) && guild?.Id == testGuildId;
             bool isConfiguredTestDate = IsAprilFoolsTestDate(now);
             bool isAprilFools = (now.Month == 4 && now.Day == 1) || (isTestGuild && isConfiguredTestDate);
 
             if (isAprilFools && guild != null)
             {
-                // Initialize a forbidden letter per guild once per process run and announce it once
                 if (!_forbiddenLettersByGuild.TryGetValue(guild.Id, out var activeLetter))
                 {
                     char[] alpha = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
@@ -151,7 +147,6 @@ namespace BaliBotDotNet
                     await message.Channel.SendMessageAsync($"The letter {activeLetter} cannot be used today!");
                 }
 
-                // Re-fetch letter (in case it was set above)
                 activeLetter = _forbiddenLettersByGuild[guild.Id];
 
                 if (message.Content.Contains(activeLetter, StringComparison.OrdinalIgnoreCase))
@@ -182,7 +177,6 @@ namespace BaliBotDotNet
             }
             else
             {
-                // Clear any stored forbidden letters when not April Fools
                 _forbiddenLettersByGuild.Clear();
             }
 
@@ -237,7 +231,6 @@ namespace BaliBotDotNet
                 .Replace(">", "\\>");
         }
 
-        // Try to get test guild id from configuration key "testguild"
         private bool TryGetTestGuildId(out ulong testGuildId)
         {
             testGuildId = 0;
@@ -254,14 +247,12 @@ namespace BaliBotDotNet
             return false;
         }
 
-        // Optional configuration key "aprilfools_testdate" in yyyy-MM-dd format.
-        // If set, April Fools behavior will be enabled on that specific date for the test guild.
+
         private bool IsAprilFoolsTestDate(DateTime now)
         {
             var dateRaw = _configuration["aprilfools_testdate"];
             if (string.IsNullOrWhiteSpace(dateRaw))
             {
-                // If not specified, allow forcing via boolean flag "aprilfools_alwaysOnForTestGuild".
                 var alwaysOnRaw = _configuration["aprilfools_alwaysOnForTestGuild"];
                 return bool.TryParse(alwaysOnRaw, out var alwaysOn) && alwaysOn;
             }

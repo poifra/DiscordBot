@@ -31,7 +31,7 @@ namespace BaliBotDotNet.MeasurementResolving
             var temperature = new UnitCategory("Temperature", "°c");
             var mass = new UnitCategory("Mass", "kg");
             var speed = new UnitCategory("Speed", "km/h");
-            var illuminance = new UnitCategory("Illuminance", "lux");
+            var light = new UnitCategory("Light", "lux");
 
             var unitDefinitions = new List<(string Aliases, UnitInfo Info, string PairedAliases)>
             {
@@ -54,8 +54,8 @@ namespace BaliBotDotNet.MeasurementResolving
                 ("kmh,km/h", new UnitInfo(speed, v => v, v => v, false), "mph"),
                 ("mph", new UnitInfo(speed, v => v * 1.60934f, v => v / 1.60934f, false), "kmh,km/h"),
 
-                ("lumen,lumens", new UnitInfo(illuminance, v => v, v => v, false), "foot candle,fc,ft-c,foot-candle"),
-                ("foot candle,fc,ft-c,foot-candle", new UnitInfo(illuminance, v => v * 10.764f, v => v / 10.764f, false), "lumen,lumens"),
+                ("lumen,lumens", new UnitInfo(light, v => v, v => v, false), "foot candle,fc,ft-c,foot-candle"),
+                ("foot candle,fc,ft-c,foot-candle", new UnitInfo(light, v => v * 10.764f, v => v / 10.764f, false), "lumen,lumens"),
             };
 
             UnitDatabase = new Dictionary<string, UnitInfo>();
