@@ -53,9 +53,11 @@ namespace BaliBotDotNet.Modules
         public enum ReminderTimezones
         {
             EST,
+            CST,
             PST,
             CEST,
-            BST
+            BST,
+            GMT
         }
 
         public enum ReminderMonths

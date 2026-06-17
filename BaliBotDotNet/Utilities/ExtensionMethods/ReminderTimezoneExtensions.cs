@@ -15,11 +15,15 @@ namespace BaliBotDotNet.Utilities.ExtensionMethods
                 ReminderTimezones.PST =>
                     TimeZoneInfo.FindSystemTimeZoneById("Pacific Standard Time"),
 
+                ReminderTimezones.CST =>
+                    TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"),
+
                 ReminderTimezones.CEST =>
                     TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time"),
 
-                ReminderTimezones.BST =>
+                ReminderTimezones.BST or ReminderTimezones.GMT =>
                     TimeZoneInfo.FindSystemTimeZoneById("GMT Standard Time"),
+
 
                 _ => throw new ArgumentOutOfRangeException(
                     nameof(timezone),
