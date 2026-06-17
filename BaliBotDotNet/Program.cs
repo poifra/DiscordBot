@@ -6,6 +6,7 @@ using BaliBotDotNet.Services;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
+using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -139,7 +140,7 @@ namespace BaliBotDotNet
             {
                 if (!_forbiddenLettersByGuild.TryGetValue(guild.Id, out var activeLetter))
                 {
-                    char[] alpha = "abcdefghijklmnopqrstuvwxyz".ToCharArray();
+                    char[] alpha = "bcdfghjklmnpqrstvwxz".ToCharArray();
                     var rng = new Random();
                     activeLetter = alpha[rng.Next(alpha.Length)];
                     _forbiddenLettersByGuild[guild.Id] = activeLetter;

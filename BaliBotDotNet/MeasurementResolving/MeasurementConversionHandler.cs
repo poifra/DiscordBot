@@ -42,7 +42,7 @@ namespace BaliBotDotNet.MeasurementResolving
                 ("inch,inches", new UnitInfo(length, v => v * 0.0254f, v => v / 0.0254f, false), "cm"),
                 ("cm", new UnitInfo(length, v => v * 0.01f, v => v / 0.01f, false), "inch,inches"),
                 
-                ("°c,c,celsius", new UnitInfo(temperature, v => v, v => v, true), "°f,f,fahrenheit")),
+                ("°c,c,celsius", new UnitInfo(temperature, v => v, v => v, true), "°f,f,fahrenheit"),
                 ("°f,f,fahrenheit", new UnitInfo(temperature, v => (v - 32) * 5 / 9f, v => (v * 9 / 5f) + 32, true), "°c,c,celsius"),
 
                 ("kg,kilo,kilogram,kilos,kilograms", new UnitInfo(mass, v => v, v => v, false), "pounds,lb,pound,lbs"),
@@ -58,7 +58,7 @@ namespace BaliBotDotNet.MeasurementResolving
                 ("foot candle,fc,ft-c,foot-candle", new UnitInfo(light, v => v * 10.764f, v => v / 10.764f, false), "lumen,lumens"),
             };
 
-            UnitDatabase = new Dictionary<string, UnitInfo>();
+            UnitDatabase = [];
             var availableNames = new HashSet<string>();
 
             foreach (var (aliases, info, pairedAliases) in unitDefinitions)
