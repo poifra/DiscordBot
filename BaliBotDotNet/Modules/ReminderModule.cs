@@ -106,7 +106,7 @@ namespace BaliBotDotNet.Modules
 
         }
 
-        [SlashCommand("datereminder", "Sets a reminder that pings you at a fixed date and time. Defaults to current time if nor time is given.", runMode: RunMode.Async)]
+        [SlashCommand("datereminder", "Sets a reminder that pings you at a fixed date and time.", runMode: RunMode.Async)]
         public async Task CreateDateReminderAsync(ReminderTimezones timezone, int year, ReminderMonths month, int day, int hour, int minute, string text)
         {
             using var scope = _serviceProvider.CreateScope();
