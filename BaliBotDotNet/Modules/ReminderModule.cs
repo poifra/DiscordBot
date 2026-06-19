@@ -1,5 +1,6 @@
 ﻿using BaliBotDotNet.Data.Interfaces;
 using BaliBotDotNet.Services;
+using BaliBotDotNet.Utilities.ExtensionMethods;
 using Discord;
 using Discord.Interactions;
 using Discord.WebSocket;
@@ -49,6 +50,32 @@ namespace BaliBotDotNet.Modules
             Minutes,Hours,Days,Years
         }
 
+        public enum ReminderTimezones
+        {
+            EST,
+            CST,
+            PST,
+            CEST,
+            BST,
+            GMT
+        }
+
+        public enum ReminderMonths
+        {
+            JAN = 1,
+            FEB = 2,
+            MAR = 3,
+            APR = 4,
+            MAY = 5,
+            JUN = 6,
+            JUL = 7,
+            AUG = 8,
+            SEP = 9,
+            OCT = 10,
+            NOV = 11,
+            DEC = 12
+        }
+
         [SlashCommand("reminder", "Sets a reminder that pings you in a fixed amount of time.", runMode: RunMode.Async)]
         public async Task CreateReminderAsync(int amount, ReminderUnits time, string text)
         {
@@ -77,6 +104,45 @@ namespace BaliBotDotNet.Modules
             int id = reminderRepository.InsertReminder(Context.User.Id, Context.Channel.Id, remindDate, text);
             await RespondAsync($"I will remind you of this in {amount} {time}. If you want to delete it in the future, use `/deletereminder {id}`.");
 
+        }
+
+        [SlashCommand("datereminder", "Sets a reminder that pings you at a fixed date and time.", runMode: RunMode.Async)]
+        public async Task CreateDateReminderAsync(ReminderTimezones timezone, int year, ReminderMonths month, int day, int hour, int minute, string text)
+        {
+            using var scope = _serviceProvider.CreateScope();
+            var reminderRepository = scope.ServiceProvider.GetRequiredService<IReminderRepository>();
+
+            TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+            TimeZoneInfo sourceTimeZone = timezone.ToTimeZoneInfo();
+
+            DateTime sourceLocalTime;
+            try
+            {
+                sourceLocalTime = new DateTime(
+                    year,
+                    (int)month,
+                    day,
+                    hour,
+                    minute,
+                    0,
+                    DateTimeKind.Unspecified);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                await ReplyAsync("Please provide a valid date and time.");
+                return;
+            }
+
+            DateTime targetReminderTime = TimeZoneInfo.ConvertTime(
+                sourceLocalTime,
+                sourceTimeZone,
+                localTimeZone);
+
+            int id = reminderRepository.InsertReminder(Context.User.Id, Context.Channel.Id, targetReminderTime, text);
+            await RespondAsync(
+                $"I will remind you of this on {targetReminderTime:yyyy-MM-dd HH:mm} ({localTimeZone.StandardName}). " +
+                $"If you want to delete it in the future, use `/deletereminder {id}`."
+            );
         }
 
         private async void CheckForReminders(object sender, ElapsedEventArgs e)
