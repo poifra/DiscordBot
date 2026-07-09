@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
+    <PackageReference Include="System.Drawing.Common" Version="11.0.0-preview.5.26302.115" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +41,8 @@
     <None Update="Resources\commands.fr.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+      <None Update="Resources\hat.png">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
   </ItemGroup>
-
 </Project>
