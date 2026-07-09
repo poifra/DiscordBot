@@ -68,17 +68,14 @@ namespace BaliBotDotNet
 
         static async Task Main(string[] args)
         {
-	        var f = new FishHatModule();
-	        await f.Fish();
-
-	        // var program = new Program();
-	        // using var cts = new CancellationTokenSource();
-	        // Console.CancelKeyPress += (s, e) =>
-	        // {
-	        //     e.Cancel = true;
-	        //     cts.Cancel();
-	        // };
-	        // await program.RunAsync(cts.Token);
+	        var program = new Program();
+	        using var cts = new CancellationTokenSource();
+	        Console.CancelKeyPress += (s, e) =>
+	        {
+	            e.Cancel = true;
+	            cts.Cancel();
+	        };
+	        await program.RunAsync(cts.Token);
         }
 
         private async Task RunAsync(CancellationToken cancellationToken)

@@ -19,28 +19,29 @@ public class FishHatModule: InteractionModuleBase<SocketInteractionContext>
 		words = words.Shuffle().ToList();
 		var line1 = string.Join(" ", words.Take(3)) + ",";
 		var line2 = string.Join(" ", words.Skip(3).Take(3)) + ".";
-		var firstLocation = new PointF(1000f, 800f);
-		var secondLocation = new PointF(1000f, 1050f);
+		var firstLocation = new PointF(1050f, 800f);
+		var secondLocation = new PointF(1050f, 1050f);
 
 		var stream = File.OpenRead("Resources/hat.png");
 		var bmp = new Bitmap(stream);
 
-		using(var graphics = Graphics.FromImage(bmp))
+		using (var graphics = Graphics.FromImage(bmp))
 		{
 			var format = new StringFormat()
 			{
-				Alignment = StringAlignment.Center,
+				Alignment = StringAlignment.Center
 			};
 			
-			using (var realFont = new Font("Crimson Text", 180, FontStyle.Bold))
+			using (var realFont = new Font("Crimson Text", 200, FontStyle.Bold))
 			{
 				graphics.DrawString(line1, realFont, Brushes.Black, firstLocation, format);
 				graphics.DrawString(line2, realFont, Brushes.Black, secondLocation, format);
 			}
 
-			bmp.Save("ok.png", ImageFormat.Png);
+			var outputStream = new MemoryStream();
+			bmp.Save(outputStream, ImageFormat.Png);
+
+			await RespondWithFileAsync(outputStream, "hat.png");
 		}
-		
-		//RespondWithFileAsync()
 	}
 }
