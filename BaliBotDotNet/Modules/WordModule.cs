@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -86,6 +87,79 @@ namespace BaliBotDotNet.Modules
             var sentence = GenerateAverageSentence(model, wordCount, rng);
 
             await FollowupAsync(sentence);
+        }
+
+        [SlashCommand("AverageHat", "Creates an average hat.")]
+        public async Task AverageHat(int wordCount = 10)
+        {
+            await DeferAsync();
+
+            if (wordCount < 3 || wordCount > 30)
+            {
+                await FollowupAsync("Count must be between 3 and 30 for a sensible sentence.");
+                return;
+            }
+
+            var guildId = Context.Guild.Id;
+            var model = GetOrBuildLanguageModel(guildId);
+
+            if (model.Unigrams.Count == 0)
+            {
+                await FollowupAsync("Not enough data to build an average sentence.");
+                return;
+            }
+
+            var rng = new Random();
+            var sentence = GenerateAverageSentence(model, wordCount, rng);
+
+            string[] words = sentence.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            int midpoint = (words.Length + 1) / 2;
+
+            string line1 = string.Join(" ", words.Take(midpoint)) + ", ";
+            string line2 = string.Join(" ", words.Skip(midpoint)) + ".";
+
+            var firstLocation = new PointF(1050f, 800f);
+            var secondLocation = new PointF(1050f, 1000f);
+
+            var stream = File.OpenRead("Resources/hat.png");
+            var bmp = new Bitmap(stream);
+
+            using (var graphics = Graphics.FromImage(bmp))
+            {
+                var format = new StringFormat()
+                {
+                    Alignment = StringAlignment.Center
+                };
+
+                const float maxWidth = 1500f;
+
+                using var font1 = CreateFittingFont(
+                    graphics,
+                    line1,
+                    "Crimson Text",
+                    FontStyle.Bold,
+                    200,
+                    60,
+                    maxWidth);
+
+                using var font2 = CreateFittingFont(
+                    graphics,
+                    line2,
+                    "Crimson Text",
+                    FontStyle.Bold,
+                    200,
+                    60,
+                    maxWidth);
+
+                graphics.DrawString(line1, font1, Brushes.Black, firstLocation, format);
+                graphics.DrawString(line2, font2, Brushes.Black, secondLocation, format);
+
+                var outputStream = new MemoryStream();
+                bmp.Save(outputStream, System.Drawing.Imaging.ImageFormat.Png);
+
+                await RespondWithFileAsync(outputStream, "hat.png");
+            }
         }
 
         [SlashCommand("socialcredit", "Displays social credit")]
@@ -616,6 +690,35 @@ namespace BaliBotDotNet.Modules
             if (string.IsNullOrEmpty(w)) return w;
             if (w.Length == 1) return w.ToUpperInvariant();
             return char.ToUpperInvariant(w[0]) + w[1..];
+        }
+
+        private static Font CreateFittingFont(
+        Graphics graphics,
+        string text,
+        string fontFamily,
+        FontStyle fontStyle,
+        float startingSize,
+        float minimumSize,
+        float maximumWidth)
+        {
+            float fontSize = startingSize;
+
+            while (fontSize >= minimumSize)
+            {
+                var font = new Font(fontFamily, fontSize, fontStyle);
+
+                SizeF size = graphics.MeasureString(text, font);
+
+                if (size.Width <= maximumWidth)
+                {
+                    return font;
+                }
+
+                font.Dispose();
+                fontSize -= 2f;
+            }
+
+            return new Font(fontFamily, minimumSize, fontStyle);
         }
     }
 
