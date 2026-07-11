@@ -1,7 +1,7 @@
 {
   "gcd": {
     "name": "ggt",
-    "description": "Gibt den größten gemeinsamen Teiler zweier Zahlen zurück",
+    "description": "Gibt den grï¿½ï¿½ten gemeinsamen Teiler zweier Zahlen zurï¿½ck",
     "options": {
       "a": {
         "name": "a",
@@ -15,29 +15,29 @@
   },
   "roll": {
     "name": "wuerfeln",
-    "description": "Würfelt. Bsp: /wuerfeln stats oder /wuerfeln 5 1d6",
+    "description": "Wï¿½rfelt. Bsp: /wuerfeln stats oder /wuerfeln 5 1d6",
     "options": {
       "isRollStats": {
         "name": "stats",
-        "description": "Für D&D-Stats würfeln (4d6 drop lowest)"
+        "description": "Fï¿½r D&D-Stats wï¿½rfeln (4d6 drop lowest)"
       },
       "numberOfOccurences": {
         "name": "anzahl",
-        "description": "Wie oft gewürfelt werden soll"
+        "description": "Wie oft gewï¿½rfelt werden soll"
       },
       "dice": {
         "name": "wuerfel",
-        "description": "Die Würfel (z.B. 1d6)"
+        "description": "Die Wï¿½rfel (z.B. 1d6)"
       },
       "removeValues": {
         "name": "entfernen",
-        "description": "Höchste/Niedrigste Werte entfernen"
+        "description": "Hï¿½chste/Niedrigste Werte entfernen"
       }
     }
   },
   "convertcurrency": {
     "name": "waehrung",
-    "description": "Konvertiert von Währung A nach Währung B",
+    "description": "Konvertiert von Wï¿½hrung A nach Wï¿½hrung B",
     "options": {
       "amount": {
         "name": "betrag",
@@ -45,11 +45,11 @@
       },
       "source": {
         "name": "quelle",
-        "description": "Quellwährung (z.B. USD)"
+        "description": "Quellwï¿½hrung (z.B. USD)"
       },
       "destination": {
         "name": "ziel",
-        "description": "Zielwährung (z.B. EUR)"
+        "description": "Zielwï¿½hrung (z.B. EUR)"
       }
     }
   },
@@ -87,11 +87,11 @@
   },
   "dadjoke": {
     "name": "flachwitz",
-    "description": "Erzählt einen Flachwitz (auf Englisch)"
+    "description": "Erzï¿½hlt einen Flachwitz (auf Englisch)"
   },
   "fact": {
     "name": "fakt",
-    "description": "Liefert einen zufälligen Fakt"
+    "description": "Liefert einen zufï¿½lligen Fakt"
   },
   "xkcd": {
     "name": "xkcd",
@@ -105,11 +105,11 @@
   },
   "deletereminder": {
     "name": "erinnerungloeschen",
-    "description": "Löscht eine spezifische Erinnerung",
+    "description": "Lï¿½scht eine spezifische Erinnerung",
     "options": {
       "reminderID": {
         "name": "id",
-        "description": "Die ID der zu löschenden Erinnerung"
+        "description": "Die ID der zu lï¿½schenden Erinnerung"
       }
     }
   },
@@ -147,7 +147,7 @@
     "options": {
       "wordCount": {
         "name": "woerter",
-        "description": "Länge des Satzes"
+        "description": "Lï¿½nge des Satzes"
       }
     }
   },
@@ -171,11 +171,11 @@
   },
   "deletefact": {
     "name": "faktloeschen",
-    "description": "Löscht einen alternativen Fakt",
+    "description": "Lï¿½scht einen alternativen Fakt",
     "options": {
       "factId": {
         "name": "id",
-        "description": "ID des zu löschenden Fakts"
+        "description": "ID des zu lï¿½schenden Fakts"
       }
     }
   },
@@ -191,7 +191,7 @@
   },
   "reload": {
     "name": "neuladen",
-    "description": "Lädt den Nachrichtenverlauf neu",
+    "description": "Lï¿½dt den Nachrichtenverlauf neu",
     "options": {
       "reloadSingleChannel": {
         "name": "einzelkanal",
@@ -199,23 +199,23 @@
       },
       "deleteHistory": {
         "name": "verlauf_loeschen",
-        "description": "Verlauf vor dem Neuladen löschen"
+        "description": "Verlauf vor dem Neuladen lï¿½schen"
       }
     }
   },
   "wordlength": {
     "name": "wortlaenge",
-    "description": "Findet das meistgenutzte Wort einer bestimmten Länge",
+    "description": "Findet das meistgenutzte Wort einer bestimmten Lï¿½nge",
     "options": {
       "wordLength": {
         "name": "laenge",
-        "description": "Wortlänge"
+        "description": "Wortlï¿½nge"
       }
     }
   },
   "choose": {
     "name": "waehlen",
-    "description": "Wählt etwas aus einer Liste aus",
+    "description": "Wï¿½hlt etwas aus einer Liste aus",
     "options": {
       "choicesString": {
         "name": "auswahl",
@@ -225,7 +225,7 @@
   },
   "coinflip": {
     "name": "muenzwurf",
-    "description": "Wirft eine Münze (Kopf oder Zahl)"
+    "description": "Wirft eine Mï¿½nze (Kopf oder Zahl)"
   },
   "togglequote": {
     "name": "zitatstatus",
@@ -233,7 +233,7 @@
   },
   "quote": {
     "name": "zitat",
-    "description": "Zitiert jemanden zufällig, ohne Kontext",
+    "description": "Zitiert jemanden zufï¿½llig, ohne Kontext",
     "options": {
       "user": {
         "name": "benutzer",
@@ -243,7 +243,7 @@
   },
   "count": {
     "name": "zaehlen",
-    "description": "Zählt, wie oft ein bestimmtes Wort vorkommt",
+    "description": "Zï¿½hlt, wie oft ein bestimmtes Wort vorkommt",
     "options": {
       "word": {
         "name": "wort",
@@ -253,17 +253,17 @@
   },
   "ngram": {
     "name": "ngram",
-    "description": "Gibt eine Liste von N-Grammen des Benutzers zurück",
+    "description": "Gibt eine Liste von N-Grammen des Benutzers zurï¿½ck",
     "options": {
       "size": {
         "name": "groesse",
-        "description": "Größe des N-Gramms (leer lassen für alle)"
+        "description": "Grï¿½ï¿½e des N-Gramms (leer lassen fï¿½r alle)"
       }
     }
   },
   "userinfo": {
     "name": "benutzerinfo",
-    "description": "Zeigt Infos über einen Benutzer an",
+    "description": "Zeigt Infos ï¿½ber einen Benutzer an",
     "options": {
       "usr": {
         "name": "benutzer",

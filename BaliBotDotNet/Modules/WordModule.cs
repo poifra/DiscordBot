@@ -10,6 +10,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -89,7 +90,7 @@ namespace BaliBotDotNet.Modules
             await FollowupAsync(sentence);
         }
 
-        [SlashCommand("AverageHat", "Creates an average hat.")]
+        [SlashCommand("averagehat", "Creates an average hat.")]
         public async Task AverageHat(int wordCount = 10)
         {
             await DeferAsync();
@@ -119,8 +120,8 @@ namespace BaliBotDotNet.Modules
             string line1 = string.Join(" ", words.Take(midpoint)) + ", ";
             string line2 = string.Join(" ", words.Skip(midpoint)) + ".";
 
-            var firstLocation = new PointF(1050f, 800f);
-            var secondLocation = new PointF(1050f, 1000f);
+            var firstLocation = new PointF(64f, 50f);
+            var secondLocation = new PointF(64f, 64f);
 
             var stream = File.OpenRead("Resources/hat.png");
             var bmp = new Bitmap(stream);
@@ -139,8 +140,8 @@ namespace BaliBotDotNet.Modules
                     line1,
                     "Crimson Text",
                     FontStyle.Bold,
-                    200,
-                    60,
+                    12,
+                    10,
                     maxWidth);
 
                 using var font2 = CreateFittingFont(
@@ -148,17 +149,17 @@ namespace BaliBotDotNet.Modules
                     line2,
                     "Crimson Text",
                     FontStyle.Bold,
-                    200,
-                    60,
+                    12,
+                    10,
                     maxWidth);
-
-                graphics.DrawString(line1, font1, Brushes.Black, firstLocation, format);
-                graphics.DrawString(line2, font2, Brushes.Black, secondLocation, format);
+                graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
+                graphics.DrawString(line2, font1, Brushes.Black, firstLocation, format);
+                graphics.DrawString(line1, font2, Brushes.Black, secondLocation, format);
 
                 var outputStream = new MemoryStream();
                 bmp.Save(outputStream, System.Drawing.Imaging.ImageFormat.Png);
 
-                await RespondWithFileAsync(outputStream, "hat.png");
+                await FollowupWithFileAsync(outputStream, "hat.png");
             }
         }
 

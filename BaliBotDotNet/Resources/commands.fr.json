@@ -9,13 +9,13 @@
       },
       "b": {
         "name": "b",
-        "description": "Deuxième nombre"
+        "description": "Deuxiï¿½me nombre"
       }
     }
   },
   "roll": {
     "name": "lancer",
-    "description": "Lance des dés. Ex: /lancer stats ou /lancer 5 1d6",
+    "description": "Lance des dï¿½s. Ex: /lancer stats ou /lancer 5 1d6",
     "options": {
       "isRollStats": {
         "name": "stats",
@@ -23,11 +23,11 @@
       },
       "numberOfOccurences": {
         "name": "nombre",
-        "description": "Nombre de fois qu'on lance les dés"
+        "description": "Nombre de fois qu'on lance les dï¿½s"
       },
       "dice": {
         "name": "des",
-        "description": "Les dés à lancer (ex: 1d6)"
+        "description": "Les dï¿½s ï¿½ lancer (ex: 1d6)"
       },
       "removeValues": {
         "name": "retirer",
@@ -41,7 +41,7 @@
     "options": {
       "amount": {
         "name": "montant",
-        "description": "Le montant à convertir"
+        "description": "Le montant ï¿½ convertir"
       },
       "source": {
         "name": "source",
@@ -54,7 +54,7 @@
     }
   },
   "8ball": {
-    "description": "Prédit le futur",
+    "description": "Prï¿½dit le futur",
     "name": "8ball",
     "options": {
       "question": {
@@ -73,7 +73,7 @@
     "options": {
       "word": {
         "name": "tag",
-        "description": "Tag spécifique ou 'gif'"
+        "description": "Tag spï¿½cifique ou 'gif'"
       }
     }
   },
@@ -95,11 +95,11 @@
   },
   "fact": {
     "name": "fait",
-    "description": "Donne un fait aléatoire"
+    "description": "Donne un fait alï¿½atoire"
   },
   "xkcd": {
     "name": "xkcd",
-    "description": "Affiche une bande dessinée XKCD",
+    "description": "Affiche une bande dessinï¿½e XKCD",
     "options": {
       "xkcdID": {
         "name": "id",
@@ -109,25 +109,25 @@
   },
   "deletereminder": {
     "name": "supprimerrappel",
-    "description": "Supprime un rappel spécifique",
+    "description": "Supprime un rappel spï¿½cifique",
     "options": {
       "reminderID": {
         "name": "id",
-        "description": "L'ID du rappel à supprimer"
+        "description": "L'ID du rappel ï¿½ supprimer"
       }
     }
   },
   "reminder": {
     "name": "rappel",
-    "description": "Définit un rappel qui vous pingera dans un temps donné",
+    "description": "Dï¿½finit un rappel qui vous pingera dans un temps donnï¿½",
     "options": {
       "amount": {
         "name": "duree",
-        "description": "Quantité de temps"
+        "description": "Quantitï¿½ de temps"
       },
       "time": {
         "name": "unite",
-        "description": "Unité (minutes, heures, jours...)"
+        "description": "Unitï¿½ (minutes, heures, jours...)"
       },
       "text": {
         "name": "message",
@@ -141,13 +141,13 @@
     "options": {
       "maximum": {
         "name": "limite",
-        "description": "Nombre d'utilisateurs à afficher"
+        "description": "Nombre d'utilisateurs ï¿½ afficher"
       }
     }
   },
   "averagesentence": {
     "name": "phrasemoyenne",
-    "description": "Génère une phrase moyenne basée sur le chat du serveur",
+    "description": "Gï¿½nï¿½re une phrase moyenne basï¿½e sur le chat du serveur",
     "options": {
       "wordCount": {
         "name": "mots",
@@ -157,15 +157,15 @@
   },
   "socialcredit": {
     "name": "creditsocial",
-    "description": "Affiche votre crédit social"
+    "description": "Affiche votre crï¿½dit social"
   },
   "messagecount": {
     "name": "compteurmessages",
-    "description": "Affiche votre nombre total de messages envoyés"
+    "description": "Affiche votre nombre total de messages envoyï¿½s"
   },
   "alternativefact": {
     "name": "faitalternatif",
-    "description": "Récupère un fait alternatif",
+    "description": "Rï¿½cupï¿½re un fait alternatif",
     "options": {
       "factId": {
         "name": "id",
@@ -179,13 +179,13 @@
     "options": {
       "factId": {
         "name": "id",
-        "description": "ID du fait à supprimer"
+        "description": "ID du fait ï¿½ supprimer"
       }
     }
   },
   "writefact": {
     "name": "ecrirefait",
-    "description": "Écrit un nouveau fait alternatif",
+    "description": "ï¿½crit un nouveau fait alternatif",
     "options": {
       "fact": {
         "name": "contenu",
@@ -209,7 +209,7 @@
   },
   "wordlength": {
     "name": "longueurmot",
-    "description": "Trouve le mot le plus utilisé d'une certaine longueur",
+    "description": "Trouve le mot le plus utilisï¿½ d'une certaine longueur",
     "options": {
       "wordLength": {
         "name": "longueur",
@@ -219,21 +219,21 @@
   },
   "choose": {
     "name": "choisir",
-    "description": "Choisit un élément dans une liste",
+    "description": "Choisit un ï¿½lï¿½ment dans une liste",
     "options": {
       "choicesString": {
         "name": "choix",
-        "description": "Liste des choix séparés par des espaces"
+        "description": "Liste des choix sï¿½parï¿½s par des espaces"
       }
     }
   },
   "coinflip": {
     "name": "pileouface",
-    "description": "Lance une pièce (Pile ou Face)"
+    "description": "Lance une piï¿½ce (Pile ou Face)"
   },
   "togglequote": {
     "name": "basculercitation",
-    "description": "Active ou désactive la possibilité d'être cité"
+    "description": "Active ou dï¿½sactive la possibilitï¿½ d'ï¿½tre citï¿½"
   },
   "quote": {
     "name": "citation",
@@ -241,7 +241,7 @@
     "options": {
       "user": {
         "name": "utilisateur",
-        "description": "L'utilisateur à citer (optionnel)"
+        "description": "L'utilisateur ï¿½ citer (optionnel)"
       }
     }
   },
@@ -251,7 +251,7 @@
     "options": {
       "word": {
         "name": "mot",
-        "description": "Le mot à chercher"
+        "description": "Le mot ï¿½ chercher"
       }
     }
   },
