@@ -153,8 +153,8 @@ namespace BaliBotDotNet.Modules
                     10,
                     maxWidth);
                 graphics.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
-                graphics.DrawString(line2, font1, Brushes.Black, firstLocation, format);
-                graphics.DrawString(line1, font2, Brushes.Black, secondLocation, format);
+                graphics.DrawString(line1, font1, Brushes.Black, firstLocation, format);
+                graphics.DrawString(line2, font2, Brushes.Black, secondLocation, format);
 
                 var outputStream = new MemoryStream();
                 bmp.Save(outputStream, System.Drawing.Imaging.ImageFormat.Png);

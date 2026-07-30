@@ -18,8 +18,8 @@ public class FishHatModule: InteractionModuleBase<SocketInteractionContext>
 		words = words.Shuffle().ToList();
 		var line1 = string.Join(" ", words.Take(3)) + ",";
 		var line2 = string.Join(" ", words.Skip(3).Take(3)) + ".";
-		var firstLocation = new PointF(64f, 64f);
-		var secondLocation = new PointF(64f, 50f);
+		var firstLocation = new PointF(64f, 50f);
+		var secondLocation = new PointF(64f, 64f);
 
 		var stream = File.OpenRead("Resources/hat.png");
 		var bmp = new Bitmap(stream);
