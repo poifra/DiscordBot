@@ -24,6 +24,8 @@ public partial class BaliBotDbContext : DbContext
 
     public virtual DbSet<Reminder> Reminders { get; set; }
 
+    public virtual DbSet<GuildLanguageModel> GuildLanguageModels { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         string connectionString = "Data Source="+Environment.CurrentDirectory + "\\BaliBotDB.sqlite";
@@ -89,6 +91,19 @@ public partial class BaliBotDbContext : DbContext
             entity.Property(e => e.AuthorID).HasColumnName("AuthorID");
             entity.Property(e => e.ChannelID).HasColumnName("ChannelID");
             entity.Property(e => e.ReminderText).IsRequired();
+        });
+
+        modelBuilder.Entity<GuildLanguageModel>(entity =>
+        {
+            entity.ToTable("GuildLanguageModel");
+
+            entity.HasKey(e => e.GuildID);
+
+            entity.Property(e => e.GuildID)
+                .ValueGeneratedNever()
+                .HasColumnName("GuildID");
+            entity.Property(e => e.BuiltAt).IsRequired();
+            entity.Property(e => e.Data).IsRequired();
         });
 
         OnModelCreatingPartial(modelBuilder);

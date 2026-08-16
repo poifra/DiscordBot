@@ -13,8 +13,10 @@ using System.Drawing;
 using System.Drawing.Text;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using RunMode = Discord.Interactions.RunMode;
@@ -29,6 +31,8 @@ namespace BaliBotDotNet.Modules
             public DateTime BuiltAt { get; set; }
             public Dictionary<string, int> Unigrams { get; set; }
             public Dictionary<string, Dictionary<string, int>> Bigrams { get; set; }
+            public Dictionary<string, Dictionary<string, int>> Trigrams { get; set; }
+            public Dictionary<string, int> SentenceStarts { get; set; }
             public int TotalUnigrams { get; set; }
         }
 
@@ -71,7 +75,8 @@ namespace BaliBotDotNet.Modules
             var guildId = Context.Guild.Id;
             using var scope = _scopeFactory.CreateScope();
             var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
-            var model = GetOrBuildLanguageModel(guildId, messageRepository);
+            var wordStatsRepository = scope.ServiceProvider.GetRequiredService<IWordStatsRepository>();
+            var model = GetOrBuildLanguageModel(guildId, messageRepository, wordStatsRepository);
 
             if (model.Unigrams.Count == 0)
             {
@@ -99,7 +104,8 @@ namespace BaliBotDotNet.Modules
             var guildId = Context.Guild.Id;
             using var scope = _scopeFactory.CreateScope();
             var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
-            var model = GetOrBuildLanguageModel(guildId, messageRepository);
+            var wordStatsRepository = scope.ServiceProvider.GetRequiredService<IWordStatsRepository>();
+            var model = GetOrBuildLanguageModel(guildId, messageRepository, wordStatsRepository);
 
             if (model.Unigrams.Count == 0)
             {
@@ -267,6 +273,7 @@ namespace BaliBotDotNet.Modules
             {
                 using var scope = _scopeFactory.CreateScope();
                 var repo = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+                var wordStatsRepo = scope.ServiceProvider.GetRequiredService<IWordStatsRepository>();
 
                 var channels = guild.TextChannels;
                 int totalProcessed = 0;
@@ -279,6 +286,10 @@ namespace BaliBotDotNet.Modules
                             repo.DropMessages(currentChannel.Id);
                         else
                             repo.DropMessages(guild.Id);
+
+                        // Dropped messages make any cached language model stale; force a rebuild next time it's needed.
+                        wordStatsRepo.DeleteLanguageModel(guild.Id);
+                        _languageModelCache.TryRemove(guild.Id, out _);
                     }
 
                     foreach (var channel in channels)
@@ -563,7 +574,7 @@ namespace BaliBotDotNet.Modules
 
         // -------- Language Model Helpers --------
 
-        private LanguageModelCache GetOrBuildLanguageModel(ulong guildId, IMessageRepository messageRepository)
+        private LanguageModelCache GetOrBuildLanguageModel(ulong guildId, IMessageRepository messageRepository, IWordStatsRepository wordStatsRepository)
         {
             if (_languageModelCache.TryGetValue(guildId, out var cached))
             {
@@ -572,14 +583,30 @@ namespace BaliBotDotNet.Modules
                     return cached;
             }
 
+            // Fall back to the persisted copy before paying to rebuild from the raw message history.
+            var stored = wordStatsRepository.GetLanguageModel(guildId);
+            if (stored != null && (DateTime.UtcNow - stored.BuiltAt).TotalDays < 30)
+            {
+                var loaded = DeserializeModel(stored.Data);
+                loaded.BuiltAt = stored.BuiltAt;
+                _languageModelCache[guildId] = loaded;
+                return loaded;
+            }
+
             var messages = messageRepository.GetAllMessages(guildId);
             Dictionary<string, int> unigrams = [];
             Dictionary<string, Dictionary<string, int>> bigrams = [];
+            Dictionary<string, Dictionary<string, int>> trigrams = [];
+            Dictionary<string, int> sentenceStarts = [];
 
             foreach (var msg in messages)
             {
                 var tokens = Tokenize(msg.Content).ToList();
                 if (tokens.Count == 0) continue;
+
+                var startWord = tokens[0];
+                sentenceStarts.TryGetValue(startWord, out int startCount);
+                sentenceStarts[startWord] = startCount + 1;
 
                 for (int i = 0; i < tokens.Count; i++)
                 {
@@ -600,22 +627,82 @@ namespace BaliBotDotNet.Modules
                         inner.TryGetValue(next, out int count);
                         inner[next] = count + 1;
                     }
+
+                    if (i < tokens.Count - 2)
+                    {
+                        var triKey = $"{w} {tokens[i + 1]}";
+                        var triNext = tokens[i + 2];
+                        if (!trigrams.TryGetValue(triKey, out var triInner))
+                        {
+                            triInner = [];
+                            trigrams[triKey] = triInner;
+                        }
+                        triInner.TryGetValue(triNext, out int triCount);
+                        triInner[triNext] = triCount + 1;
+                    }
                 }
             }
 
-            // Remove extremely rare words to reduce noise.
+            // Remove extremely rare words/transitions to reduce noise and bound memory usage.
+            // Bigrams and especially trigrams have far more distinct keys than unigrams, so
+            // dropping one-off (never-repeated) transitions matters a lot more for them.
             unigrams = unigrams.Where(kv => kv.Value >= 2 && kv.Key.Length > 1).ToDictionary(x => x.Key, x => x.Value);
+            sentenceStarts = sentenceStarts.Where(kv => kv.Value >= 2 && kv.Key.Length > 1).ToDictionary(x => x.Key, x => x.Value);
+            bigrams = PruneRareTransitions(bigrams);
+            trigrams = PruneRareTransitions(trigrams);
 
             var model = new LanguageModelCache
             {
                 BuiltAt = DateTime.UtcNow,
                 Unigrams = unigrams,
                 Bigrams = bigrams,
+                Trigrams = trigrams,
+                SentenceStarts = sentenceStarts,
                 TotalUnigrams = unigrams.Values.Sum()
             };
 
             _languageModelCache[guildId] = model;
+
+            wordStatsRepository.SaveLanguageModel(new GuildLanguageModel
+            {
+                GuildID = guildId,
+                BuiltAt = model.BuiltAt,
+                Data = SerializeModel(model)
+            });
+
             return model;
+        }
+
+        private static Dictionary<string, Dictionary<string, int>> PruneRareTransitions(Dictionary<string, Dictionary<string, int>> transitions)
+        {
+            Dictionary<string, Dictionary<string, int>> pruned = [];
+            foreach (var (key, inner) in transitions)
+            {
+                var keptInner = inner.Where(kv => kv.Value >= 2).ToDictionary(x => x.Key, x => x.Value);
+                if (keptInner.Count > 0)
+                    pruned[key] = keptInner;
+            }
+            return pruned;
+        }
+
+        private static byte[] SerializeModel(LanguageModelCache model)
+        {
+            var json = JsonSerializer.SerializeToUtf8Bytes(model);
+            using var output = new MemoryStream();
+            using (var gzip = new GZipStream(output, CompressionLevel.Optimal))
+            {
+                gzip.Write(json, 0, json.Length);
+            }
+            return output.ToArray();
+        }
+
+        private static LanguageModelCache DeserializeModel(byte[] data)
+        {
+            using var input = new MemoryStream(data);
+            using var gzip = new GZipStream(input, CompressionMode.Decompress);
+            using var output = new MemoryStream();
+            gzip.CopyTo(output);
+            return JsonSerializer.Deserialize<LanguageModelCache>(output.ToArray());
         }
 
         private static IEnumerable<string> Tokenize(string content)
@@ -637,32 +724,51 @@ namespace BaliBotDotNet.Modules
         {
             if (model.Unigrams.Count == 0) return string.Empty;
 
-            // Choose a starting word among top frequency lexical items (avoid filler like "the" sometimes).
-            var startPool = model.Unigrams
-                .OrderByDescending(kv => kv.Value)
-                .Where(kv => kv.Key.Length > 2 && !IsStopWord(kv.Key))
-                .Take(50)
-                .Select(kv => kv.Key)
-                .ToList();
+            // Choose a starting word among words that actually begin real messages, so sentences
+            // open the way people actually open sentences instead of just picking a common word.
+            string first = null;
+            if (model.SentenceStarts != null && model.SentenceStarts.Count > 0)
+            {
+                first = WeightedPick(model.SentenceStarts, rng, w => !IsStopWord(w))
+                        ?? WeightedPick(model.SentenceStarts, rng);
+            }
 
-            string current = startPool.Count > 0 ? startPool[rng.Next(startPool.Count)]
-                                                 : model.Unigrams.OrderByDescending(kv => kv.Value).First().Key;
+            if (first == null)
+            {
+                var startPool = model.Unigrams
+                    .OrderByDescending(kv => kv.Value)
+                    .Where(kv => kv.Key.Length > 2 && !IsStopWord(kv.Key))
+                    .Take(50)
+                    .Select(kv => kv.Key)
+                    .ToList();
 
-            List<string> words = [Capitalize(current)];
+                first = startPool.Count > 0 ? startPool[rng.Next(startPool.Count)]
+                                             : model.Unigrams.OrderByDescending(kv => kv.Value).First().Key;
+            }
+
+            List<string> words = [Capitalize(first)];
             HashSet<string> used = [];
+            string previous = null;
+            string current = first;
 
             for (int i = 1; i < targetLength; i++)
             {
                 string next = null;
 
-                if (model.Bigrams.TryGetValue(current, out var nextDict))
+                // Prefer the trigram model (last two words) for coherence, falling back to
+                // bigram (last word) and finally the overall distribution when a key is unseen.
+                if (previous != null && model.Trigrams.TryGetValue($"{previous} {current}", out var triDict))
+                {
+                    next = WeightedPick(triDict, rng, w => !used.Contains(w));
+                }
+
+                if (next == null && model.Bigrams.TryGetValue(current, out var nextDict))
                 {
                     next = WeightedPick(nextDict, rng, w => !used.Contains(w));
                 }
 
                 if (next == null)
                 {
-                    // Fallback to overall distribution.
                     next = WeightedPick(model.Unigrams, rng, w => !used.Contains(w));
                 }
 
@@ -670,6 +776,7 @@ namespace BaliBotDotNet.Modules
 
                 words.Add(next);
                 used.Add(next);
+                previous = current;
                 current = next;
             }
 

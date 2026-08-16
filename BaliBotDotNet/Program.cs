@@ -6,7 +6,6 @@ using BaliBotDotNet.Services;
 using Discord;
 using Discord.Commands;
 using Discord.Interactions;
-using Discord.Net;
 using Discord.WebSocket;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -60,6 +59,7 @@ namespace BaliBotDotNet
                 .AddScoped<IReminderRepository, ReminderRepository>()
                 .AddScoped<IAuthorRepository, AuthorRepository>()
                 .AddScoped<IAlternativeFactRepository, AlternativeFactRepository>()
+                .AddScoped<IWordStatsRepository, WordStatsRepository>()
                 .BuildServiceProvider();
 
             _scopeFactory = _services.GetRequiredService<IServiceScopeFactory>();
