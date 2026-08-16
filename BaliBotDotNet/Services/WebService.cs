@@ -88,8 +88,16 @@ namespace BaliBotDotNet.Services
 
         internal async Task<(HttpStatusCode, float?)> GetConversionRateAsync(string source, string destination)
         {
-            using var jsonConfig = JsonDocument.Parse(File.ReadAllText(Environment.CurrentDirectory + "\\config.json"));
-            string token = jsonConfig.RootElement.GetProperty("currencyKey").GetString();
+            using var jsonConfig = JsonDocument.Parse(File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "config.json")));
+            string token;
+            try
+            {
+                token = jsonConfig.RootElement.GetProperty("currencyKey").GetString();
+            }
+            catch (KeyNotFoundException)
+            {
+                return (HttpStatusCode.NotAcceptable, null);
+            }
 
             _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
             string conversion = $"{source.ToUpper()}_{destination.ToUpper()}";

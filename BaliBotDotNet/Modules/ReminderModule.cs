@@ -15,14 +15,9 @@ namespace BaliBotDotNet.Modules
     public class ReminderModule : InteractionModuleBase<SocketInteractionContext>
     {
         private readonly IServiceScopeFactory _serviceProvider;
-        private DiscordSocketClient _client { get; set; }
-        public ReminderModule(DiscordSocketClient client, IServiceScopeFactory serviceProvider)
+        public ReminderModule(IServiceScopeFactory serviceProvider)
         {
-            _client = client;
             _serviceProvider = serviceProvider;
-            Timer t = new(1000 * 60);
-            t.Elapsed += CheckForReminders;
-            t.Start();
         }
 
         [SlashCommand("deletereminder","Deletes a specific reminder", runMode: RunMode.Async)]
@@ -143,20 +138,6 @@ namespace BaliBotDotNet.Modules
                 $"I will remind you of this on {targetReminderTime:yyyy-MM-dd HH:mm} ({localTimeZone.StandardName}). " +
                 $"If you want to delete it in the future, use `/deletereminder {id}`."
             );
-        }
-
-        private async void CheckForReminders(object sender, ElapsedEventArgs e)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var reminderRepository = scope.ServiceProvider.GetRequiredService<IReminderRepository>();
-            var reminders = reminderRepository.CheckForReminders();
-            foreach (var reminder in reminders)
-            {
-                var channel = _client.GetChannel(reminder.ChannelID) as IMessageChannel;
-                await channel.SendMessageAsync($"{MentionUtils.MentionUser(reminder.AuthorID)} you wanted to be reminded of : \"{reminder.ReminderText}\"");
-                reminderRepository.SetReminderDone(reminder.ReminderID);
-            }
-          //  scope.Dispose();
         }
     }
 }

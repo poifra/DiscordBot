@@ -24,14 +24,12 @@ namespace BaliBotDotNet.Modules
         public async Task GCD(int a, int b)
         {
             await DeferAsync();
-            if (b == 0)
-            {
-                await ReplyAsync($"{a}");
-            }
-            else
-            {
-                await GCD(b, a % b);
-            }
+            await ReplyAsync($"{ComputeGCD(a, b)}");
+        }
+
+        private static int ComputeGCD(int a, int b)
+        {
+            return b == 0 ? a : ComputeGCD(b, a % b);
         }
 
         public enum RemoveValueChoice

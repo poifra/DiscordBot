@@ -32,21 +32,12 @@ namespace BaliBotDotNet.Modules
             public int TotalUnigrams { get; set; }
         }
 
-        private readonly IMessageRepository _messageRepository;
-        private readonly IAuthorRepository _authorRepository;
-        private readonly IAlternativeFactRepository _alternativeFactRepository;
         private readonly IServiceScopeFactory _scopeFactory;
         // Simple per-guild language model cache to avoid rebuilding every invocation.
         private static readonly ConcurrentDictionary<ulong, LanguageModelCache> _languageModelCache = new();
 
-        public WordModule(IMessageRepository messageRepository, 
-                          IAuthorRepository authorRepository,
-                          IAlternativeFactRepository alternativeFactRepository,
-                          IServiceScopeFactory scopeFactory)
+        public WordModule(IServiceScopeFactory scopeFactory)
         {
-            _messageRepository = messageRepository;
-            _authorRepository = authorRepository;
-            _alternativeFactRepository = alternativeFactRepository;
             _scopeFactory = scopeFactory;
         }
 
@@ -60,7 +51,9 @@ namespace BaliBotDotNet.Modules
                 await FollowupAsync("Maximum must be between 1 and 20");
                 return;
             }
-            var leaderboard = _messageRepository.GetLeaderboard(guildID, maximum);
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var leaderboard = messageRepository.GetLeaderboard(guildID, maximum);
             await FollowupAsync(leaderboard.Select((kvPair, i) => $"#{i + 1} {kvPair.User} {kvPair.Count}").Join('\n'));
         }
 
@@ -76,7 +69,9 @@ namespace BaliBotDotNet.Modules
             }
 
             var guildId = Context.Guild.Id;
-            var model = GetOrBuildLanguageModel(guildId);
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var model = GetOrBuildLanguageModel(guildId, messageRepository);
 
             if (model.Unigrams.Count == 0)
             {
@@ -102,7 +97,9 @@ namespace BaliBotDotNet.Modules
             }
 
             var guildId = Context.Guild.Id;
-            var model = GetOrBuildLanguageModel(guildId);
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var model = GetOrBuildLanguageModel(guildId, messageRepository);
 
             if (model.Unigrams.Count == 0)
             {
@@ -176,7 +173,9 @@ namespace BaliBotDotNet.Modules
         {
             await DeferAsync();
             ulong authorID = Context.User.Id;
-            var leaderboard = _messageRepository.GetAllMessages(Context.Guild.Id, authorID);
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var leaderboard = messageRepository.GetAllMessages(Context.Guild.Id, authorID);
             await FollowupAsync($"You sent {leaderboard.Count} messages.");
         }
 
@@ -187,14 +186,18 @@ namespace BaliBotDotNet.Modules
             AlternativeFact fact;
             await DeferAsync();
 
+            using var scope = _scopeFactory.CreateScope();
+            var alternativeFactRepository = scope.ServiceProvider.GetRequiredService<IAlternativeFactRepository>();
+            var authorRepository = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
+
             if (factId == -1)
             {
-                var factList = _alternativeFactRepository.GetAllFacts();
+                var factList = alternativeFactRepository.GetAllFacts();
                 fact = factList[rng.Next(factList.Count)];
             }
             else
-            { 
-                fact = _alternativeFactRepository.GetFact(factId);
+            {
+                fact = alternativeFactRepository.GetFact(factId);
             }
 
             if (fact == null)
@@ -203,7 +206,7 @@ namespace BaliBotDotNet.Modules
                 return;
             }
 
-            var author = _authorRepository.GetAuthor(fact.AuthorID);
+            var author = authorRepository.GetAuthor(fact.AuthorID);
             await FollowupAsync($"Fact #{fact.AlternativeFactID}: {fact.Description} - {author.Username}");
         }
 
@@ -211,7 +214,9 @@ namespace BaliBotDotNet.Modules
         public async Task DeleteAlternativeFact(int factId)
         {
             await DeferAsync();
-            var fact = _alternativeFactRepository.GetFact(factId);
+            using var scope = _scopeFactory.CreateScope();
+            var alternativeFactRepository = scope.ServiceProvider.GetRequiredService<IAlternativeFactRepository>();
+            var fact = alternativeFactRepository.GetFact(factId);
 
             if (fact == null)
             {
@@ -223,7 +228,7 @@ namespace BaliBotDotNet.Modules
             }
             else
             {
-                _alternativeFactRepository.DeleteFact(factId);
+                alternativeFactRepository.DeleteFact(factId);
                 await FollowupAsync($"Fact #{fact.AlternativeFactID} successfully deleted");
             }
         }
@@ -237,7 +242,9 @@ namespace BaliBotDotNet.Modules
                 await FollowupAsync("Please write facts that have maximum 200 characters");
                 return;
             }
-            _alternativeFactRepository.WriteFact(fact, Context.User.Id);
+            using var scope = _scopeFactory.CreateScope();
+            var alternativeFactRepository = scope.ServiceProvider.GetRequiredService<IAlternativeFactRepository>();
+            alternativeFactRepository.WriteFact(fact, Context.User.Id);
             await FollowupAsync($"Fact written successfully!");
         }
 
@@ -331,7 +338,9 @@ namespace BaliBotDotNet.Modules
                 return;
             }
 
-            var dict = LoadMessages(wordLength);
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var dict = LoadMessages(messageRepository, wordLength);
             var kv = dict.FirstOrDefault(x => x.Value == dict.Values.Max());
             if (string.IsNullOrEmpty(kv.Key))
             {
@@ -382,8 +391,15 @@ namespace BaliBotDotNet.Modules
         {
             await DeferAsync();
             ulong authorID = Context.User.Id;
-            var author = _authorRepository.GetAuthor(authorID);
-            _authorRepository.ToggleQuotable(author);
+            using var scope = _scopeFactory.CreateScope();
+            var authorRepository = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
+            var author = authorRepository.GetAuthor(authorID);
+            if (author == null)
+            {
+                await FollowupAsync("You have no messages recorded yet, so there is nothing to toggle.");
+                return;
+            }
+            authorRepository.ToggleQuotable(author);
             string status = author.IsQuotable ? "now" : "no longer";
             await FollowupAsync($"{Context.User.Username} is {status} quotable.");
         }
@@ -393,17 +409,20 @@ namespace BaliBotDotNet.Modules
         {
             
             await DeferAsync();
-            var messageList = user == null ? 
-                  _messageRepository.GetAllMessages(Context.Guild.Id) 
-                : _messageRepository.GetAllMessages(Context.Guild.Id,user.Id);
-            var rng = new Random();
-            var index = rng.Next(messageList.Count);
-            if (index <= 0)
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var authorRepository = scope.ServiceProvider.GetRequiredService<IAuthorRepository>();
+            var messageList = user == null ?
+                  messageRepository.GetAllMessages(Context.Guild.Id)
+                : messageRepository.GetAllMessages(Context.Guild.Id,user.Id);
+            if (messageList.Count == 0)
             {
                 await FollowupAsync($"This person either has no messages or doesn't wish to be quoted.");
                 return;
             }
 
+            var rng = new Random();
+            var index = rng.Next(messageList.Count);
             var message = messageList[index];
             while (message.Content.Contains('@') || message.Content.Equals(""))
             {
@@ -411,7 +430,7 @@ namespace BaliBotDotNet.Modules
                 index = rng.Next(messageList.Count);
                 message = messageList[index];
             }
-            var author = _authorRepository.GetAuthor(message.AuthorID);
+            var author = authorRepository.GetAuthor(message.AuthorID);
             SocketGuildUser authorObject = (SocketGuildUser)await Context.Channel.GetUserAsync(message.AuthorID);
             var displayName = authorObject != null ? authorObject.DisplayName : author.Username;
             DateTime date = DateTime.Parse(message.DateSent);
@@ -428,7 +447,9 @@ namespace BaliBotDotNet.Modules
             {
                 await FollowupAsync("You must specify a word to search.");
             }
-            var dict = LoadMessages();
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var dict = LoadMessages(messageRepository);
             if (dict.TryGetValue(word, out int count))
             {
                 await FollowupAsync($"The word \"{word}\" has been used {count} time(s).");
@@ -443,7 +464,9 @@ namespace BaliBotDotNet.Modules
         {
             await DeferAsync();
             List<string> results = [];
-            var messages = _messageRepository.GetAllMessages(Context.Guild.Id, Context.User.Id);
+            using var scope = _scopeFactory.CreateScope();
+            var messageRepository = scope.ServiceProvider.GetRequiredService<IMessageRepository>();
+            var messages = messageRepository.GetAllMessages(Context.Guild.Id, Context.User.Id);
 
             if (size != 0)
             {
@@ -512,9 +535,9 @@ namespace BaliBotDotNet.Modules
             return sb.ToString();
         }
 
-        private Dictionary<string, int> LoadMessages(int wordLength = 0)
+        private Dictionary<string, int> LoadMessages(IMessageRepository messageRepository, int wordLength = 0)
         {
-            var messages = _messageRepository.GetAllMessages(Context.Guild.Id);
+            var messages = messageRepository.GetAllMessages(Context.Guild.Id);
             Dictionary<string, int> dict = [];
             foreach (var m in messages)
             {
@@ -540,7 +563,7 @@ namespace BaliBotDotNet.Modules
 
         // -------- Language Model Helpers --------
 
-        private LanguageModelCache GetOrBuildLanguageModel(ulong guildId)
+        private LanguageModelCache GetOrBuildLanguageModel(ulong guildId, IMessageRepository messageRepository)
         {
             if (_languageModelCache.TryGetValue(guildId, out var cached))
             {
@@ -549,7 +572,7 @@ namespace BaliBotDotNet.Modules
                     return cached;
             }
 
-            var messages = _messageRepository.GetAllMessages(guildId);
+            var messages = messageRepository.GetAllMessages(guildId);
             Dictionary<string, int> unigrams = [];
             Dictionary<string, Dictionary<string, int>> bigrams = [];
 

@@ -51,6 +51,7 @@ namespace BaliBotDotNet
                 .AddSingleton<DiscordSocketClient>()
                 .AddSingleton(x => new InteractionService(x.GetRequiredService<DiscordSocketClient>(), interactionConfig))
                 .AddSingleton<InteractionHandler>()
+                .AddSingleton<ReminderTimerService>()
                 .AddSingleton<CommandService>()
                 .AddSingleton<HttpClient>()
                 .AddSingleton<WebService>()
@@ -95,6 +96,7 @@ namespace BaliBotDotNet
             await client.StartAsync();
 
             await _services.GetRequiredService<InteractionHandler>().InitializeAsync();
+            _services.GetRequiredService<ReminderTimerService>().Start();
 
             try
             {

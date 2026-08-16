@@ -96,8 +96,9 @@ namespace BaliBotDotNet.Services
                 var context = new SocketInteractionContext(_client, interaction);
                 var result = await _interactionService.ExecuteCommandAsync(context, _services);
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine(ex);
                 if (interaction.Type is InteractionType.ApplicationCommand)
                     await interaction.GetOriginalResponseAsync().ContinueWith(async (msg) => await msg.Result.DeleteAsync());
             }

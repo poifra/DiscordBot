@@ -24,6 +24,7 @@ namespace BaliBotDotNet.Data
             if (reminder != null)
             {
                 _db.Reminders.Remove(reminder);
+                _db.SaveChanges();
             }
         }
 

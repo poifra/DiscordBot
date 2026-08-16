@@ -29,8 +29,7 @@ namespace BaliBotDotNet.Modules
    
         public async Task UserInfoAsync(IUser usr = null)
         {
-           // SocketGuildUser user = Context.Guild.Users.First(x => x.Id == (usr ?? Context.User).Id);
-            SocketGuildUser user = (SocketGuildUser)Context.User;
+            SocketGuildUser user = Context.Guild.Users.First(x => x.Id == (usr ?? Context.User).Id);
             var client = new HttpClient();
             var avatar = user.GetAvatarUrl(size: 256) ?? user.GetDefaultAvatarUrl();
             Stream response = await client.GetStreamAsync(avatar);
@@ -83,6 +82,7 @@ namespace BaliBotDotNet.Modules
 
         private static string GetSupportedLocale(string userLocale)
         {
+            if (userLocale == null) return "en";
             if (userLocale.StartsWith("fr")) return "fr";
             if (userLocale.StartsWith("de")) return "de";
             return "en";
